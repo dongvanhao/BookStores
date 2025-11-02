@@ -1,5 +1,7 @@
 ﻿using BookStore.API.Middlewares;
+using BookStore.Domain.IRepository.Common;
 using BookStore.Infrastructure.Data;
+using BookStore.Infrastructure.Repository.Common;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -12,7 +14,8 @@ var cs = builder.Configuration.GetConnectionString("UsersDb")
          ?? throw new InvalidOperationException("Missing connection string 'UsersDb'.");
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("UsersDb")));
-
+// Đăng ký Unit of Work và Repository
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();

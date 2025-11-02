@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Folder Include="IRepository\Analytics &amp; Activity\" />
-    <Folder Include="IRepository\Catalog\" />
     <Folder Include="IRepository\System\" />
     <Folder Include="IRepository\Shipping\" />
     <Folder Include="IRepository\Rental\" />
