@@ -20,6 +20,12 @@ namespace BookStore.Domain.Entities.Identity
         public bool IsActive { get; set; } = true; // Trạng thái kích hoạt tài khoản
         public DateTime CreateAt { get; set; } = DateTime.UtcNow; // Thời gian tạo tài khoản
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow; // Thời gian cập nhật tài khoản gần nhất
+        public bool EmailConfirmed { get; set; } = false; // Trạng thái xác nhận email
+        public bool IsLocked { get; set; } = false; // Trạng thái khóa tài khoản
+
+        public virtual ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
+        public virtual ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = new List<EmailVerificationToken>();
+
 
         // Navigation property đến hồ sơ người dùng
         public virtual UserProfile? Profiles { get; set; } // Thông tin hồ sơ người dùng liên quan

@@ -1,4 +1,6 @@
-﻿using BookStore.Domain.IRepository.Catalog;
+﻿using BookStore.Domain.Entities.Identity;
+using BookStore.Domain.IRepository.Catalog;
+using BookStore.Domain.IRepository.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +14,22 @@ namespace BookStore.Domain.IRepository.Common
         // Thêm các repository cụ thể của bạn ở đây
         // Ví dụ: IBookRepository BookRepository { get; }
         // Ví dụ: IShipperRepository ShipperRepository { get; }
-        IBookRepository BookRepository { get; }
-        Task<int> SaveChangesAsync();// Phương thức để commit tất cả thay đổi
+
+        //User & Auth
+        IUserRepository Users { get; }
+        IRefreshTokenRepository RefreshTokens { get; }
+        IGenericRepository<PasswordResetToken> PasswordResetTokens { get; }
+
+        //Role - Permission
+        IRoleRepository Roles { get; }
+        IPermissionRepository Permissions { get; }
+        IUserRoleRepository UserRoles { get; }
+        IRolePermissionRepository RolePermissions { get; }
+
+        IGenericRepository<EmailVerificationToken> EmailVerificationTokens { get; }
+        
+        
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);// Phương thức SaveChanges cho các nghiệp vụ KHÔNG cần transaction
+        Task ExcuteTransactionAsync(Func<Task> action); // Phương thức thực thi các nghiệp vụ có transaction
     }
 }

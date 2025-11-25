@@ -1,11 +1,6 @@
 ﻿using BookStore.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BookStore.Infrastructure.Data.Configurations.Identity
 {
@@ -21,7 +16,7 @@ namespace BookStore.Infrastructure.Data.Configurations.Identity
             //  Email là unique
             builder.HasIndex(u => u.Email).IsUnique();
 
-            //  Thuộc tính
+            // Thuộc tính
             builder.Property(u => u.Email)
                 .IsRequired()
                 .HasMaxLength(255);
@@ -35,6 +30,16 @@ namespace BookStore.Infrastructure.Data.Configurations.Identity
             builder.Property(u => u.CreateAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 
+            builder.Property(u => u.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            //Cấu hình cho EmailConfirmed
+            builder.Property(u => u.EmailConfirmed)
+                .HasDefaultValue(false)
+                .IsRequired();
+            //Cấu hình cho IsLocked
+            builder.Property(u => u.IsLocked)
+                .HasDefaultValue(false)
+                .IsRequired();
             //  Quan hệ 1-1 với UserProfile
             builder.HasOne(u => u.Profiles)
                 .WithOne(p => p.User)
@@ -63,6 +68,18 @@ namespace BookStore.Infrastructure.Data.Configurations.Identity
             builder.HasMany(u => u.UserRoles)
                 .WithOne(ur => ur.User)
                 .HasForeignKey(ur => ur.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //  1-n với PasswordResetToken
+            builder.HasMany(u => u.PasswordResetTokens)
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //  1-n với EmailVerificationToken
+            builder.HasMany(u => u.EmailVerificationTokens)
+                .WithOne(t => t.User)
+                .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -31,6 +31,8 @@ namespace BookStore.Infrastructure.Data
         public DbSet<UserDevice> UserDevices { get; set; } = null!;
         public DbSet<UserAddress> UserAddresses { get; set; } = null!;
         public DbSet<UserProfile> UserProfiles { get; set; } = null!;
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; } = null!;
         #endregion
 
         #region Catalog
