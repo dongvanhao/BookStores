@@ -1,7 +1,7 @@
 ﻿using BookStore.Domain.Entities.Catalog;
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Infrastructure.Data;
-using BookStore.Infrastructure.Repository.Identity;
+using BookStore.Infrastructure.Repository.Common;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

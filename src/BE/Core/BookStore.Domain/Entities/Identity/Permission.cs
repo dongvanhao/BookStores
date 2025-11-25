@@ -9,6 +9,7 @@ namespace BookStore.Domain.Entities.Identity
     public class Permission
     {
         public Guid Id { get; set; }
+        public string Code { get; set; } = null!;
         public string Name { get; set; } = null!; // Tên quyền (ví dụ: Read, Write, Delete)
         public string Description { get; set; } = null!; // Mô tả về quyền
         // Quan hệ nhiều-nhiều với Role thông qua RolePermission

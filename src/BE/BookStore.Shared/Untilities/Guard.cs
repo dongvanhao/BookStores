@@ -1,21 +1,41 @@
-﻿using BookStore.Shared.Exceptions;
+﻿// File: BookStore.Shared.Utilities/Guard.cs
+using BookStore.Shared.Common; // Cần using Error và ErrorType
 
-namespace BookStore.Shared.Utilities;
-
-public static class Guard
+namespace BookStore.Shared.Utilities
 {
-    public static void AgainstNullOrWhiteSpace(string? value, string fieldName)
+    public static class Guard
     {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ValidationException(new Dictionary<string, string[]>
+        /// <summary>
+        /// Kiểm tra giá trị string có null hoặc trống không.
+        /// </summary>
+        /// <returns>Trả về Error nếu vi phạm, ngược lại trả về null.</returns>
+        public static Error? AgainstNullOrWhiteSpace(string? value, string fieldName)
+        {
+            if (string.IsNullOrWhiteSpace(value))
             {
-                [fieldName] = new[] { $"{fieldName} không được để trống." }
-            });
-    }
+                return new Error(
+                    code: $"{fieldName}.Required", // Code lỗi rõ ràng
+                    message: $"{fieldName} không được để trống.",
+                    type: ErrorType.Validation // 400 Bad Request
+                );
+            }
+            return null; // Hợp lệ
+        }
 
-    public static void Against(bool condition, string message, int statusCode = 400)
-    {
-        if (condition)
-            throw new UserFriendlyException(message, statusCode);
+        /// <summary>
+        /// Kiểm tra một điều kiện (condition).
+        /// Nếu condition là 'true' (vi phạm), trả về Error.
+        /// </summary>
+        /// <param name="condition">Điều kiện vi phạm (vd: user == null)</param>
+        /// <param name="error">Đối tượng Error sẽ trả về nếu vi phạm.</param>
+        /// <returns>Trả về Error nếu vi phạm, ngược lại trả về null.</returns>
+        public static Error? Against(bool condition, Error error)
+        {
+            if (condition)
+            {
+                return error;
+            }
+            return null; // Hợp lệ
+        }
     }
 }
