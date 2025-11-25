@@ -17,6 +17,12 @@ namespace BookStore.Infrastructure.Data.Configurations.Identity
 
             builder.HasKey(p => p.Id);
 
+            builder.Property(p => p.Code)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            builder.HasIndex(p => p.Code).IsUnique();
+
             builder.Property(p => p.Name)
                 .HasMaxLength(100)
                 .IsRequired();
