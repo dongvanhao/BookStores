@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: .    
+      dockerfile: Core/BookStore.API/Dockerfile
+    container_name: bookstore-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=BookStoreDb;User Id=sa;Password=Your_password123;Encrypt=False;TrustServerCertificate=True"
+    depends_on:
+      - sqlserver
+    ports:
+      - "5000:8080"
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bookstore-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Your_password123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+volumes:
+  sql_data:
