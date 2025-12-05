@@ -18,6 +18,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Minio" Version="6.0.2" />
     <PackageReference Include="OpenIddict.AspNetCore" Version="5.7.0" />
     <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="5.7.0" />
     <PackageReference Include="OpenIddict.Server" Version="5.7.0" />
