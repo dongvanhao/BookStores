@@ -1,5 +1,6 @@
 ﻿using BookStore.API.Middlewares;
 using BookStore.Application.IService.Identity;
+using BookStore.Application.Options;
 using BookStore.Application.Services.Identity;
 using BookStore.Application.Services.IDentity;
 using BookStore.Domain.IRepository.Common;
@@ -10,8 +11,11 @@ using BookStore.Infrastructure.Repository.Common;
 using BookStore.Infrastructure.Repository.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Minio;
+using Minio.DataModel.Args;
 using System.Text;
 using System.Text.Json;
 
@@ -126,6 +130,21 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+// =====================================
+// MinIO
+// =====================================
+builder.Services.Configure<MinIOOptions>(builder.Configuration.GetSection("MinIO"));
+
+builder.Services.AddSingleton<IMinioClient>(sp =>
+{
+    var config = sp.GetRequiredService<IOptions<MinIOOptions>>().Value;
+
+    return new MinioClient()
+        .WithEndpoint(config.Endpoint)
+        .WithCredentials(config.AccessKey, config.SecretKey)
+        .WithSSL(config.UseSSL)
+        .Build();
+});
 
 
 var app = builder.Build();
@@ -134,6 +153,17 @@ var app = builder.Build();
 // 8. AUTO MIGRATION + SEEDING
 // =====================================
 await EnsureDatabaseReadyAsync(app);
+var minio = app.Services.GetRequiredService<IMinioClient>();
+var minioOptions = app.Services.GetRequiredService<IOptions<MinIOOptions>>().Value;
+
+bool exists = await minio.BucketExistsAsync(
+    new BucketExistsArgs().WithBucket(minioOptions.BucketName));
+
+if (!exists)
+{
+    await minio.MakeBucketAsync(
+        new MakeBucketArgs().WithBucket(minioOptions.BucketName));
+}
 
 // =====================================
 // 9. PIPELINE
