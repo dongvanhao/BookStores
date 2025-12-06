@@ -37,10 +37,10 @@ namespace BookStore.API.Controllers
         /// <summary>
         /// Helper private để tạo response lỗi từ Error
         /// </summary>
-        private IActionResult CreateErrorResponse(Error error)
+        protected IActionResult CreateErrorResponse(Error error)
         {
             // Ánh xạ ErrorType sang HttpStatusCode
-            var statusCode = error.type switch
+            var statusCode = error.Type switch
             {
                 ErrorType.Validation => HttpStatusCode.BadRequest,       // 400
                 ErrorType.Unauthorized => HttpStatusCode.Unauthorized, // 401
@@ -55,8 +55,8 @@ namespace BookStore.API.Controllers
             // Trả về ProblemDetails (chuẩn của .NET Core)
             // Nó sẽ tự động format lỗi cho client
             return Problem(
-                title: error.code,
-                detail: error.message,
+                title: error.Code,
+                detail: error.Message,
                 statusCode: (int)statusCode
             );
         }
