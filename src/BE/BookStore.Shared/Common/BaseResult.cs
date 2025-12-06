@@ -1,4 +1,6 @@
-﻿namespace BookStore.Shared.Common
+﻿using Microsoft.AspNetCore.Http;
+
+namespace BookStore.Shared.Common
 {
     public class BaseResult<T>
     {
@@ -26,6 +28,19 @@
         public static BaseResult<T> Fail(string code, string message, ErrorType type) =>
             new BaseResult<T>(false, default, new Error(code, message, type));
 
+        // Helper NotFound: tạo kết quả lỗi 404 nhanh
+        public static BaseResult<T> NotFound(string? message = null)
+        {
+            var error = CommonErrors.NotFound;
+
+            // Nếu truyền message riêng thì override Message
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                error = error with { Message = message };
+            }
+
+            return Fail(error);
+        }
 
         // -------------------------
         // WRAP ASYNC FUNCTION
