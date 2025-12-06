@@ -19,5 +19,8 @@ namespace BookStore.Shared.Common
 
         public static Error InternalServerError(string message = "Lỗi hệ thống.") => new(
              "Internal.Exception", message, ErrorType.Internal);
+
+        public static readonly Error NotFound = new(
+            "Common.NotFound", "Không tìm thấy tài nguyên.", ErrorType.NotFound);
     }
 }

@@ -11,8 +11,8 @@ namespace BookStore.Shared.Common
     /// tính bất biến (immutable) sau khi được tạo ra.
     /// </summary>
     public record Error(
-            string code,
-            string message,
-            ErrorType type = ErrorType.Failure
+            string Code,
+            string Message,
+            ErrorType Type = ErrorType.Failure
          );
 }

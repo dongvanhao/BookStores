@@ -1,5 +1,6 @@
 ﻿using BookStore.API.Middlewares;
 using BookStore.Application.IService.Identity;
+using BookStore.Application.IService.Storage;
 using BookStore.Application.Options;
 using BookStore.Application.Services.Identity;
 using BookStore.Application.Services.IDentity;
@@ -7,6 +8,7 @@ using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Data.DataSeeder;
+using BookStore.Infrastructure.MinIO;
 using BookStore.Infrastructure.Repository.Common;
 using BookStore.Infrastructure.Repository.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -129,6 +131,11 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+    c.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
 });
 // =====================================
 // MinIO
@@ -145,7 +152,7 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
         .WithSSL(config.UseSSL)
         .Build();
 });
-
+builder.Services.AddScoped<IStorageService, MinioStorageService>();
 
 var app = builder.Build();
 
