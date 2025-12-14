@@ -23,6 +23,8 @@ namespace BookStore.Domain.Entities.Catalog
         public string? Edition { get; set; }                   // Phiên bản (tái bản lần thứ mấy)
         public int PageCount { get; set; }                     // Số trang
 
+        public string? CoverImageUrl { get; set; }             // Ảnh đại diện → cache từ BookImage (không tham chiếu MinIO)
+
         // 🔗 1-n: Mỗi sách thuộc 1 nhà xuất bản
         public Guid PublisherId { get; set; }
         public virtual Publisher Publisher { get; set; } = null!;
