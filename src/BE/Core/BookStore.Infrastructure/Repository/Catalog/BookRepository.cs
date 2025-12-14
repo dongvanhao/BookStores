@@ -11,18 +11,44 @@ using System.Threading.Tasks;
 
 namespace BookStore.Infrastructure.Repository.Catalog
 {
-    public class BookRepository : GenericRepository<Book>, IBookRepository
+    public class BookRepository : IBookRepository
     {
-        public BookRepository(AppDbContext context) : base(context)
+        private readonly AppDbContext _context;
+        public BookRepository(AppDbContext context)
         {
+            _context = context;
         }
 
-        public async Task<Book?> GetBookWithDetailsAsync(Guid id)
+        public async Task AddAsync(Book book)
         {
-            return await _dbSet
-            .Include(b => b.Description)
-            .FirstOrDefaultAsync(b => b.Id == id);
+            await _context.Books.AddAsync(book);
         }
 
+        public async Task DeleteAsync(Book book)
+        {
+            _context.Books.Remove(book);
+        }
+
+        public async Task<Book?> GetByIdAsync(Guid id)
+        {
+            return await _context.Books.FindAsync(id);
+        }
+
+        public async Task<Book?> GetDetailAsync(Guid id)
+        {
+            return await _context.Books
+                .Include(b => b.Publisher)
+                .Include(b => b.BookAuthors)
+                    .ThenInclude(ba => ba.Author)
+                .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
+                .Include(b => b.Images)
+                .Include(b => b.Files)
+                .Include(b => b.Metadata)
+                .Include(b => b.Prices)
+                .Include(b => b.StockItem)
+                .Include(b => b.Reviews)
+                .FirstOrDefaultAsync(b => b.Id == id);
+        }
     }
 }

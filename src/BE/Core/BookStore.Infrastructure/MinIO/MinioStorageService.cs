@@ -100,5 +100,41 @@ namespace BookStore.Infrastructure.MinIO
                 return BaseResult<bool>.Fail(CommonErrors.InternalServerError(ex.Message));
             }
         }
+
+        public async Task<BaseResult<object>> UpdateAsync(string objectKey, Stream stream, long size, string contentType, string fileName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(objectKey))
+                    return BaseResult<object>.Fail("Khóa đối tượng không hợp lệ", "Khóa đối tượng được cung cấp là null hoặc trống.", ErrorType.Validation);
+
+                if (stream == null || size <= 0)
+                    return BaseResult<object>.Fail("Luồng không hợp lệ", "Luồng được cung cấp là null hoặc trống.", ErrorType.Validation);
+
+                //Always overwrite → MinIO không có update, chỉ có put
+                stream.Position = 0;
+
+                var args = new PutObjectArgs()
+                    .WithBucket(_options.BucketName)
+                    .WithObject(objectKey) // Ghi đè lên objectKey cu
+                    .WithStreamData(stream)
+                    .WithObjectSize(size)
+                    .WithContentType(contentType);
+
+                await _minio.PutObjectAsync(args);
+
+                return BaseResult<object>.Ok(new
+                {
+                    ObjectKey = objectKey,
+                    ContentType = contentType,
+                    FileName = fileName,
+                    Size = size
+                });
+            }
+            catch (Exception ex)
+            {
+                return BaseResult<object>.Fail(CommonErrors.InternalServerError(ex.Message));
+            }
+        }
     }
 }

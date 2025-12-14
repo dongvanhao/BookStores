@@ -10,7 +10,10 @@ namespace BookStore.Domain.Entities.Catalog
     {
         public Guid Id { get; set; }
 
-        public string ImageUrl { get; set; } = null!;         // Đường dẫn ảnh lưu trên S3/MinIO
+        public string ObjectName { get; set; } = null!;  // Tên file trong MinIO
+        public string Url { get; set; } = null!;         // URL public hoặc presigned
+        public string ContentType { get; set; } = null!;
+        public long Size { get; set; }
         public bool IsCover { get; set; }                     // Ảnh này có phải bìa chính không
         public int DisplayOrder { get; set; }                 // Thứ tự hiển thị ảnh
 
