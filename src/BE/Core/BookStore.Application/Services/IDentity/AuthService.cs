@@ -76,7 +76,7 @@ namespace BookStore.Application.Services.IDentity
                 if (user == null)
                     return "If your email exists, a reset link has been sent.";
 
-                await _uow.ExcuteTransactionAsync(async () =>
+                await _uow.ExecuteTransactionAsync(async () =>
                 {
                     var tokenPlain = Guid.NewGuid().ToString("N");
                     var tokenHash = _hashing.HashToken(tokenPlain);
@@ -182,7 +182,7 @@ namespace BookStore.Application.Services.IDentity
             var (newPlain, newExpiry) = _jwt.GenerateRefreshToken();
             var newHash = _hashing.HashToken(newPlain);
 
-            await _uow.ExcuteTransactionAsync(async () =>
+            await _uow.ExecuteTransactionAsync(async () =>
             {
                 existing.Revoked = true;
                 existing.ReplacedByTokenHash = newHash;
@@ -218,7 +218,7 @@ namespace BookStore.Application.Services.IDentity
 
             return await BaseResult<string>.Create(async () =>
             {
-                await _uow.ExcuteTransactionAsync(async () =>
+                await _uow.ExecuteTransactionAsync(async () =>
                 {
                     var user = new User
                     {
@@ -277,7 +277,7 @@ namespace BookStore.Application.Services.IDentity
 
             return await BaseResult<string>.Create(async () =>
             {
-                await _uow.ExcuteTransactionAsync(async () =>
+                await _uow.ExecuteTransactionAsync(async () =>
                 {
                     // 3. Tạo User
                     var user = new User
@@ -321,7 +321,7 @@ namespace BookStore.Application.Services.IDentity
 
             return await BaseResult<string>.Create(async () =>
             {
-                await _uow.ExcuteTransactionAsync(async () =>
+                await _uow.ExecuteTransactionAsync(async () =>
                 {
                     var user = resetToken.User;
 

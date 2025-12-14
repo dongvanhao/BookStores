@@ -14,22 +14,22 @@ namespace BookStore.Shared.Errors
     public static class AuthErrors
     {
         public static readonly Error EmailExists = new(
-            code: "Auth.EmailExists",
-            message: "Email đã tồn tại",
-            type: ErrorType.Conflict // 409 Conflict
+            Code: "Auth.EmailExists",
+            Message: "Email đã tồn tại",
+            Type: ErrorType.Conflict // 409 Conflict
         );
 
         public static readonly Error InvalidCredentials = new(
-            code: "Auth.InvalidCredentials",
-            message: "Email hoặc password không đúng",
-            type: ErrorType.Unauthorized // 401 Unauthorized
+            Code: "Auth.InvalidCredentials",
+            Message: "Email hoặc password không đúng",
+            Type: ErrorType.Unauthorized // 401 Unauthorized
         );
 
         // Bạn có thể thêm các lỗi khác ở đây...
         public static readonly Error ForbiddenAccess = new(
-            code: "Auth.Forbidden",
-            message: "Bạn không có quyền thực hiện hành động này",
-            type: ErrorType.Forbidden // 403 Forbidden
+            Code: "Auth.Forbidden",
+            Message: "Bạn không có quyền thực hiện hành động này",
+            Type: ErrorType.Forbidden // 403 Forbidden
         );
     }
 }

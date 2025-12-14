@@ -26,10 +26,13 @@ namespace BookStore.Domain.IRepository.Common
         IUserRoleRepository UserRoles { get; }
         IRolePermissionRepository RolePermissions { get; }
 
+        //Catalog
+        IBookRepository Books { get; }
+        IPublisherRepository Publishers { get; }
         IGenericRepository<EmailVerificationToken> EmailVerificationTokens { get; }
         
         
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);// Phương thức SaveChanges cho các nghiệp vụ KHÔNG cần transaction
-        Task ExcuteTransactionAsync(Func<Task> action); // Phương thức thực thi các nghiệp vụ có transaction
+        Task ExecuteTransactionAsync(Func<Task> action); // Phương thức thực thi các nghiệp vụ có transaction
     }
 }

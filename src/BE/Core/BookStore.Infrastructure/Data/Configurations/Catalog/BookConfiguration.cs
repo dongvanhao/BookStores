@@ -70,6 +70,12 @@ namespace BookStore.Infrastructure.Data.Configurations.Catalog
                 .WithOne(m => m.Book)
                 .HasForeignKey(m => m.BookId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Property(b => b.CoverImageUrl)
+                .HasMaxLength(1000)
+                .IsUnicode(false)
+                .IsRequired(false);
+
         }
     }
 }

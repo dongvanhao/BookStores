@@ -3,6 +3,7 @@ using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
 using BookStore.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 using static OpenIddict.Abstractions.OpenIddictConstants;
@@ -23,6 +24,8 @@ namespace BookStore.Infrastructure.Repository.Common
         public IUserRoleRepository UserRoles { get; }
         public IRolePermissionRepository RolePermissions { get; }
 
+        public IBookRepository Books { get; }
+        public IPublisherRepository Publishers { get; }
         public UnitOfWork(
      AppDbContext ctx,
          IUserRepository users,
@@ -32,7 +35,10 @@ namespace BookStore.Infrastructure.Repository.Common
          IRoleRepository roles,
          IPermissionRepository permissions,
          IUserRoleRepository userRoles,
-         IRolePermissionRepository rolePermissions
+         IRolePermissionRepository rolePermissions,
+         //catalog
+         IBookRepository books,
+         IPublisherRepository publisher
            )
         {
             _ctx = ctx;
@@ -46,6 +52,9 @@ namespace BookStore.Infrastructure.Repository.Common
             Permissions = permissions;
             UserRoles = userRoles;
             RolePermissions = rolePermissions;
+
+            Books = books;
+            publisher = publisher;
         }
 
 
@@ -60,22 +69,28 @@ namespace BookStore.Infrastructure.Repository.Common
         /// <summary>
         /// Thực thi một hành động trong transaction
         /// </summary>
-        public async Task ExcuteTransactionAsync(Func<Task> action)
+        public async Task ExecuteTransactionAsync(Func<Task> action)
         {
-            // Begin transaction
-            await using var transaction = await _ctx.Database.BeginTransactionAsync();
-            try
+            var strategy = _ctx.Database.CreateExecutionStrategy();
+
+            await strategy.ExecuteAsync(async () =>
             {
-                await action(); // Thực thi các repository thao tác dữ liệu
-                await _ctx.SaveChangesAsync(); // Lưu tất cả thay đổi
-                await transaction.CommitAsync(); // Commit transaction
-            }
-            catch
-            {
-                await transaction.RollbackAsync(); // Rollback nếu có lỗi
-                throw;
-            }
+                await using var transaction = await _ctx.Database.BeginTransactionAsync();
+                try
+                {
+                    await action();
+                    await _ctx.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
         }
+
+
 
         /// <summary>
         /// Dispose đồng bộ

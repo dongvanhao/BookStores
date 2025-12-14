@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 
 namespace BookStore.Domain.IRepository.Catalog
 {
-    public interface IBookRepository : IGenericRepository<Book>
+    public interface IBookRepository 
     {
-        Task<Book?> GetBookWithDetailsAsync(Guid id);
+        Task<Book?> GetByIdAsync(Guid id);
+        Task<Book?> GetDetailAsync(Guid id);
+        Task AddAsync (Book book);
+        Task DeleteAsync (Book book);
     }
 }

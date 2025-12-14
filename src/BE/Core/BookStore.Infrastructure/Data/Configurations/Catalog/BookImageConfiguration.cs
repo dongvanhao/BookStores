@@ -12,9 +12,20 @@ namespace BookStore.Infrastructure.Data.Configurations.Catalog
 
             builder.HasKey(i => i.Id);
 
-            builder.Property(i => i.ImageUrl)
+            builder.Property(i => i.ObjectName)
                 .IsRequired()
                 .HasMaxLength(500);
+
+            builder.Property(i => i.Url)
+                .IsRequired()
+                .HasMaxLength(1000);
+
+            builder.Property(i => i.ContentType)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            builder.Property(i => i.Size)
+                .HasDefaultValue(0);
 
             builder.Property(i => i.IsCover)
                 .HasDefaultValue(false);

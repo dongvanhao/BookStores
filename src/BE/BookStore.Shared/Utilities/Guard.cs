@@ -14,9 +14,9 @@ namespace BookStore.Shared.Utilities
             if (string.IsNullOrWhiteSpace(value))
             {
                 return new Error(
-                    code: $"{fieldName}.Required", // Code lỗi rõ ràng
-                    message: $"{fieldName} không được để trống.",
-                    type: ErrorType.Validation // 400 Bad Request
+                    Code: $"{fieldName}.Required", // Code lỗi rõ ràng
+                    Message: $"{fieldName} không được để trống.",
+                    Type: ErrorType.Validation // 400 Bad Request
                 );
             }
             return null; // Hợp lệ

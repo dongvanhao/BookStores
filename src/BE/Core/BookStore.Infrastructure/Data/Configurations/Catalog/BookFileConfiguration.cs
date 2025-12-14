@@ -12,7 +12,11 @@ namespace BookStore.Infrastructure.Data.Configurations.Catalog
 
             builder.HasKey(f => f.Id);
 
-            builder.Property(f => f.FileUrl)
+            builder.Property(f => f.ObjectName)
+                .HasMaxLength(500)
+                .IsRequired();
+
+            builder.Property(f => f.Url)
                 .HasMaxLength(500)
                 .IsRequired();
 

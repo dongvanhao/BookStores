@@ -1,14 +1,18 @@
 ﻿using BookStore.API.Middlewares;
+using BookStore.Application.IService.Catalog.Book;
 using BookStore.Application.IService.Identity;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Options;
+using BookStore.Application.Services.Catalog;
 using BookStore.Application.Services.Identity;
 using BookStore.Application.Services.IDentity;
+using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Data.DataSeeder;
 using BookStore.Infrastructure.MinIO;
+using BookStore.Infrastructure.Repository.Catalog;
 using BookStore.Infrastructure.Repository.Common;
 using BookStore.Infrastructure.Repository.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -52,6 +56,9 @@ builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+//Catalog
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
@@ -59,6 +66,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IHashingService, BcryptHasingService>();
 builder.Services.AddScoped<IEmailSender, EmailSenderFake>();
+
+//CataLog
+builder.Services.AddScoped<IBookService, BookService>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
 
