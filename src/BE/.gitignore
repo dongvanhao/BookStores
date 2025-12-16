@@ -2,4 +2,8 @@ bin/
 obj/ 
 .vs/
 .env/
+.env
+.env.*
+.ENV
+.ENV.*
 *.user
