@@ -1,58 +1,20 @@
+
+
 services:
   api:
-    build:
-      context: .
-      dockerfile: Core/BookStore.API/Dockerfile
-    container_name: bookstore-api
-    environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
-
-      # SQL Connection String
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=BookStoreDb;User Id=sa;Password=${SA_PASSWORD};Encrypt=False;TrustServerCertificate=True"
-
-      # JWT
-      JwtOptions__Key: "${JWT_SECRET}"
-      JwtOptions__Issuer: "BookStoreAPI"
-      JwtOptions__Audience: "BookStoreClient"
-      JwtOptions__ExpiryInMinutes: "60"
-
-      # MinIO
-      MinIO__Endpoint: "${MINIO_ENDPOINT}"
-      MinIO__AccessKey: "${MINIO_ACCESS}"
-      MinIO__SecretKey: "${MINIO_SECRET}"
-      MinIO__BucketName: "${MINIO_BUCKET}"
-      MinIO__UseSSL: "false"
-
-      # Seed
-      AppOptions__EnableSeed: "${ENABLE_SEED}"
-
+    image: bookstore-api
     depends_on:
       - sqlserver
       - minio
-    ports:
-      - "5000:8080"
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: bookstore-sql
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "${SA_PASSWORD}"
-    ports:
-      - "1433:1433"
     volumes:
       - sql_data:/var/opt/mssql
 
   minio:
     image: minio/minio
-    container_name: bookstore-minio
     command: server /data --console-address ":9090"
-    environment:
-      MINIO_ROOT_USER: "${MINIO_ACCESS}"
-      MINIO_ROOT_PASSWORD: "${MINIO_SECRET}"
-    ports:
-      - "9000:9000"
-      - "9090:9090"
     volumes:
       - minio_data:/data
 
