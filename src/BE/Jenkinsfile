@@ -9,14 +9,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git credentialsId: 'github-ssh',
-                    branch: 'main',
-                    url: 'git@github.com:dongvanhao/dongvanhao-bookstores.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh '''
