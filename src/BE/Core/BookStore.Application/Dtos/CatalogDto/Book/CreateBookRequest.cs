@@ -10,7 +10,7 @@ namespace BookStore.Application.Dtos.CatalogDto.Book
     {
         public string Title { get; set; } = null;
         public string ISBN { get; set; } = null;
-        public string Description { get; set; } = null;
+        public string? Description { get; set; }
         public int PublicationYear { get; set; }
         public Guid PublisherId { get; set; }
 

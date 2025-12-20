@@ -54,7 +54,7 @@ namespace BookStore.Infrastructure.Repository.Common
             RolePermissions = rolePermissions;
 
             Books = books;
-            publisher = publisher;
+            Publishers = publisher;
         }
 
 

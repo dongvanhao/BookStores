@@ -44,6 +44,7 @@ namespace BookStore.Application.Services.Catalog
                 Id = Guid.NewGuid(),
                 Title = request.Title.NormalizeSpace(),
                 ISBN = request.ISBN.NormalizeSpace(),
+                Description = request.Description?.NormalizeSpace() ?? string.Empty,
                 PublicationYear = request.PublicationYear,
                 PublisherId = request.PublisherId
             };
@@ -72,7 +73,9 @@ namespace BookStore.Application.Services.Catalog
                     ObjectName = upload.Value!,
                     ContentType = coverImage.ContentType,
                     Size = coverImage.Length,
-                    IsCover = true
+                    IsCover = true,
+                    Url = $"/api/file/{upload.Value}"
+
                 });
             });
 

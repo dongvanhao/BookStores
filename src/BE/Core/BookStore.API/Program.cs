@@ -1,9 +1,11 @@
 ﻿using BookStore.API.Middlewares;
 using BookStore.Application.IService.Catalog.Book;
+using BookStore.Application.IService.Catalog.Publisher;
 using BookStore.Application.IService.Identity;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Options;
 using BookStore.Application.Services.Catalog;
+using BookStore.Application.Services.Catalog.Publisher;
 using BookStore.Application.Services.Identity;
 using BookStore.Application.Services.IDentity;
 using BookStore.Domain.IRepository.Catalog;
@@ -60,6 +62,7 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
 
+
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -69,6 +72,7 @@ builder.Services.AddScoped<IEmailSender, EmailSenderFake>();
 
 //CataLog
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IPublisherService, PublisherService>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
 
