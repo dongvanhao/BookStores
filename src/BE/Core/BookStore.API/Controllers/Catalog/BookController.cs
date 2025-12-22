@@ -10,38 +10,35 @@ namespace BookStore.API.Controllers.Catalog
     [ApiController]
     public class BookController : BaseController
     {
-        private readonly IBookService _bookService;
-        public BookController(IBookService bookService)
+        private readonly IBookService _Service;
+        public BookController(IBookService Service)
         {
-            _bookService = bookService;
+            _Service = Service;
         }
 
         [HttpPost]
-        [Consumes("multipart/form-data")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create(
-       [FromForm] CreateBookRequest request,
-       IFormFile? coverImage)
-       => FromResult(await _bookService.CreateAsync(request, coverImage));
+        public async Task<IActionResult> Create(CreateBookRequestDto request)
+            => FromResult(await _Service.CreateAsync(request));
+
+        [HttpGet]
+        public async Task<IActionResult> GetList(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+        => FromResult(await _Service.GetListAsync(page, pageSize));
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
-            => FromResult(await _bookService.GetByIdAsync(id));
+        public async Task<IActionResult> GetById(Guid id)
+            => FromResult(await _Service.GetByIdAsync(id));
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(Guid id, UpdateBookRequest request)
-            => FromResult(await _bookService.UpdateAsync(id, request));
-
-        [HttpPut("{id}/cover")]
-        [Consumes("multipart/form-data")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateCover(Guid id, IFormFile coverImage)
-            => FromResult(await _bookService.UpdateCoverAsync(id, coverImage));
+        public async Task<IActionResult> Update(Guid id, UpdateBookRequestDto request)
+            => FromResult(await _Service.UpdateAsync(id, request));
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
-            => FromResult(await _bookService.DeleteAsync(id));
+            => FromResult(await _Service.DeleteAsync(id));
     }
 }

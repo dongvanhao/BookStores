@@ -8,10 +8,9 @@ using System.Threading.Tasks;
 
 namespace BookStore.Domain.IRepository.Catalog
 {
-    public interface IBookRepository : IGenericRepository<Book>
+    public interface IBookImageRepository : IGenericRepository<Entities.Catalog.BookImage>
     {
-        Task<bool> ExistsByISBNAsync(string isbn);
-        Task<Book?> GetDetailAsync(Guid id);
-        Task<IReadOnlyList<Book>> GetPagedAsync(int skip, int take);
+        Task<IReadOnlyList<Entities.Catalog.BookImage>> GetByBookIdAsync(Guid bookId);
+        Task<BookImage?> GetCoverAsync(Guid bookId);
     }
 }

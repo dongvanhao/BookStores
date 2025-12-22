@@ -1,6 +1,7 @@
 ﻿using BookStore.Application.Dtos.CatalogDto.Book;
 using BookStore.Application.IService.Catalog.Book;
 using BookStore.Application.IService.Storage;
+using BookStore.Application.Mappers.Catalog.Book;
 using BookStore.Domain.Entities.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
@@ -25,150 +26,122 @@ namespace BookStore.Application.Services.Catalog
             _storage = storage;
         }
 
-        public async Task<BaseResult<Guid>> CreateAsync(
-    CreateBookRequest request,
-    IFormFile? coverImage)
+        public async Task<BaseResult<BookDetailResponseDto>> CreateAsync(CreateBookRequestDto request)
         {
-            var error = Guard.AgainstNullOrWhiteSpace(request.Title, nameof(request.Title))
-                     ?? Guard.AgainstNullOrWhiteSpace(request.ISBN, nameof(request.ISBN));
-
-            if (error != null)
-                return BaseResult<Guid>.Fail(error);
+            if (await _uow.Books.ExistsByISBNAsync(request.ISBN))
+                return BaseResult<BookDetailResponseDto>.Fail(
+                    "Book.DuplicatedISBN",
+                    "ISBN đã tồn tại",
+                    ErrorType.Conflict
+                );
 
             var publisher = await _uow.Publishers.GetByIdAsync(request.PublisherId);
             if (publisher == null)
-                return BaseResult<Guid>.NotFound("Publisher không tồn tại");
+                return BaseResult<BookDetailResponseDto>.NotFound("Publisher không tồn tại");
 
-            var book = new Book
+            var book = new Domain.Entities.Catalog.Book
             {
                 Id = Guid.NewGuid(),
                 Title = request.Title.NormalizeSpace(),
-                ISBN = request.ISBN.NormalizeSpace(),
-                Description = request.Description?.NormalizeSpace() ?? string.Empty,
+                ISBN = request.ISBN,
+                Description = request.Description,
                 PublicationYear = request.PublicationYear,
+                Language = request.Language,
+                Edition = request.Edition,
+                PageCount = request.PageCount,
                 PublisherId = request.PublisherId
             };
 
+            await _uow.Books.AddAsync(book);
 
-            await _uow.ExecuteTransactionAsync(async () =>
-            {
-                await _uow.Books.AddAsync(book);
-
-                if (coverImage == null) return;
-
-                var upload = await _storage.UploadAsync(
-                    coverImage.OpenReadStream(),
-                    coverImage.Length,
-                    coverImage.ContentType,
-                    coverImage.FileName,
-                    $"books/covers/{book.Id}");
-
-                if (!upload.IsSuccess)
-                    throw new InvalidOperationException(upload.Error!.Message);
-
-                book.Images.Add(new BookImage
+            // Authors
+            foreach (var authorId in request.AuthorIds.Distinct())
+                await _uow.BookAuthor.AddAsync(new BookAuthor
                 {
-                    Id = Guid.NewGuid(),
                     BookId = book.Id,
-                    ObjectName = upload.Value!,
-                    ContentType = coverImage.ContentType,
-                    Size = coverImage.Length,
-                    IsCover = true,
-                    Url = $"/api/file/{upload.Value}"
-
+                    AuthorId = authorId
                 });
-            });
 
-            return BaseResult<Guid>.Ok(book.Id);
+            // Categories
+            foreach (var categoryId in request.CategoryIds.Distinct())
+                await _uow.BookCategory.AddAsync(new BookCategory
+                {
+                    BookId = book.Id,
+                    CategoryId = categoryId
+                });
+
+            await _uow.SaveChangesAsync();
+
+            return await GetByIdAsync(book.Id);
+        }
+        public async Task<BaseResult<BookDetailResponseDto>> GetByIdAsync(Guid id)
+        {
+            var book = await _uow.Books.GetDetailAsync(id);
+
+            if (book == null)
+                return BaseResult<BookDetailResponseDto>.NotFound("Không tìm thấy sách");
+
+            return BaseResult<BookDetailResponseDto>.Ok(book.ToDetailResponse());
         }
 
+        public async Task<BaseResult<PagedResult<BookDetailResponseDto>>> GetListAsync(int page, int pageSize)
+        {
+            if (page <= 0 || pageSize <= 0)
+            {
+                return BaseResult<PagedResult<BookDetailResponseDto>>.Fail(
+                    "Book.InvalidPagination",
+                    "Page và PageSize phải lớn hơn 0",
+                    ErrorType.Validation
+                );
+            }
 
+            var skip = (page - 1) * pageSize;
+
+            var total = await _uow.Books.CountAsync();
+            var books = await _uow.Books.GetPagedAsync(skip, pageSize);
+
+            var items = books
+                .Select(b => b.ToDetailResponse())
+                .ToList();
+
+            return BaseResult<PagedResult<BookDetailResponseDto>>.Ok(
+                new PagedResult<BookDetailResponseDto>(
+                    items,
+                    total,
+                    page,
+                    pageSize
+                )
+            );
+        }
+            
+        public async Task<BaseResult<BookDetailResponseDto>> UpdateAsync(Guid id, UpdateBookRequestDto request)
+        {
+           var book = await _uow.Books.GetByIdAsync(id);
+              if (book == null)
+                return BaseResult<BookDetailResponseDto>.NotFound("Không tìm thấy sách");
+
+            book.Title = request.Title.NormalizeSpace();
+            book.Description = request.Description;
+            book.IsAvailable = request.IsAvailable;
+            book.Edition = request.Edition;
+            book.PageCount = request.PageCount;
+
+            _uow.Books.Update(book);
+            await _uow.SaveChangesAsync();
+
+            var updatedBook = await _uow.Books.GetDetailAsync(book.Id);
+            return BaseResult<BookDetailResponseDto>.Ok(updatedBook!.ToDetailResponse());
+        }
 
         public async Task<BaseResult<bool>> DeleteAsync(Guid id)
         {
             var book = await _uow.Books.GetByIdAsync(id);
             if (book == null)
                 return BaseResult<bool>.NotFound("Không tìm thấy sách");
-
-            _uow.Books.DeleteAsync(book);
-            await _uow.SaveChangesAsync();
-
-            return BaseResult<bool>.Ok(true);
-        }
-
-
-        public async Task<BaseResult<BookResponse>> GetByIdAsync(Guid id)
-        {
-            var book = await _uow.Books.GetDetailAsync(id);
-            if (book == null)
-                return BaseResult<BookResponse>.NotFound("Không tìm thấy sách");
-
-            return BaseResult<BookResponse>.Ok(new BookResponse
-            {
-                Id = book.Id,
-                Title = book.Title,
-                CoverImageUrl = book.CoverImageUrl
-            });
-        }
-
-
-        public async Task<BaseResult<bool>> UpdateAsync(Guid id, UpdateBookRequest request)
-        {
-            var book = await _uow.Books.GetByIdAsync(id);
-            if (book == null)
-                return BaseResult<bool>.NotFound("Không tìm thấy sách");
-
-            book.Title = request.Title.NormalizeSpace();
-            book.Description = request.Description.NormalizeSpace();
-            book.PublicationYear = request.PublicationYear;
-
+            
+            _uow.Books.Delete(book);
             await _uow.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
-        }
-
-
-        public async Task<BaseResult<bool>> UpdateCoverAsync(Guid id, IFormFile coverImage)
-        {
-            var book = await _uow.Books.GetDetailAsync(id);
-            if (book == null)
-                return BaseResult<bool>.NotFound("Không tìm thấy sách");
-
-            try
-            {
-                await _uow.ExecuteTransactionAsync(async () =>
-                {
-                    foreach (var img in book.Images)
-                        img.IsCover = false;
-
-                    var upload = await _storage.UploadAsync(
-                        coverImage.OpenReadStream(),
-                        coverImage.Length,
-                        coverImage.ContentType,
-                        coverImage.FileName,
-                        $"books/covers/{book.Id}");
-
-                    if (!upload.IsSuccess)
-                        throw new Exception(upload.Error!.Message);
-
-                    book.Images.Add(new BookImage
-                    {
-                        Id = Guid.NewGuid(),
-                        BookId = book.Id,
-                        ObjectName = upload.Value!,
-                        ContentType = coverImage.ContentType,
-                        Size = coverImage.Length,
-                        IsCover = true
-                    });
-
-                    book.CoverImageUrl = $"/api/file/{upload.Value}";
-                });
-
-                return BaseResult<bool>.Ok(true);
-            }
-            catch (Exception ex)
-            {
-                return BaseResult<bool>.Fail(CommonErrors.InternalServerError(ex.Message));
-            }
         }
 
     }

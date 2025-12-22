@@ -6,13 +6,9 @@ using System.Threading.Tasks;
 
 namespace BookStore.Application.Dtos.CatalogDto.Book
 {
-    public class CreateBookRequest
+    public class CreateBookFormatRequestDto
     {
-        public string Title { get; set; } = null;
-        public string ISBN { get; set; } = null;
+        public string FormatType { get; set; } = null!; // e.g., "PDF", "ePub", "Mobi"
         public string? Description { get; set; }
-        public int PublicationYear { get; set; }
-        public Guid PublisherId { get; set; }
-
     }
 }

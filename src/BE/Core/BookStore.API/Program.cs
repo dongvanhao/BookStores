@@ -1,10 +1,15 @@
 ﻿using BookStore.API.Middlewares;
+using BookStore.Application.IService.Catalog.Author;
 using BookStore.Application.IService.Catalog.Book;
+using BookStore.Application.IService.Catalog.Category;
 using BookStore.Application.IService.Catalog.Publisher;
 using BookStore.Application.IService.Identity;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Options;
 using BookStore.Application.Services.Catalog;
+using BookStore.Application.Services.Catalog.Author;
+using BookStore.Application.Services.Catalog.Book;
+using BookStore.Application.Services.Catalog.Category;
 using BookStore.Application.Services.Catalog.Publisher;
 using BookStore.Application.Services.Identity;
 using BookStore.Application.Services.IDentity;
@@ -58,9 +63,17 @@ builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-//Catalog
+//Catalog Reportories
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IBookFileRepository, BookFileRepository>();
+builder.Services.AddScoped<IBookFormatRepository, BookFormatRepository>();
+builder.Services.AddScoped<IBookImageRepository, BookImageRepository>();
+builder.Services.AddScoped<IBookMetadataRepository, BookMetadataRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IBookAuthorRepository, BookAuthorRepository>();
+builder.Services.AddScoped<IBookCategoryRepository, BookCategoryRepository>();
 
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -70,9 +83,17 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IHashingService, BcryptHasingService>();
 builder.Services.AddScoped<IEmailSender, EmailSenderFake>();
 
-//CataLog
+//CataLog Services
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IBookFileService, BookFileService>();
+builder.Services.AddScoped<IBookFormatService, BookFormatService>();
+builder.Services.AddScoped<IBookImageService, BookImageService>();
+builder.Services.AddScoped<IBookMetadataService, BookMetadataService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IPublisherService, PublisherService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IBookAuthorService, BookAuthorService>();
+builder.Services.AddScoped<IBookCategoryService, BookCategoryService>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
 
