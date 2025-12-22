@@ -53,7 +53,7 @@ namespace BookStore.API.Controllers
             };
 
             // Trả về ProblemDetails (chuẩn của .NET Core)
-            // Nó sẽ tự động format lỗi cho client
+            // tự động format lỗi cho client
             return Problem(
                 title: error.Code,
                 detail: error.Message,

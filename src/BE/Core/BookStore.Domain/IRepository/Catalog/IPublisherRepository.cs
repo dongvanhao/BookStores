@@ -9,5 +9,6 @@ namespace BookStore.Domain.IRepository.Catalog
 {
     public interface IPublisherRepository : IGenericRepository<Entities.Catalog.Publisher>
     {
+        Task<bool> ExitsByNameAsync(string name);
     }
 }

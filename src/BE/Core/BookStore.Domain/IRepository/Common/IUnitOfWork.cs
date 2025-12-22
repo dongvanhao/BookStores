@@ -29,6 +29,14 @@ namespace BookStore.Domain.IRepository.Common
         //Catalog
         IBookRepository Books { get; }
         IPublisherRepository Publishers { get; }
+        IAuthorRepository Author { get; }
+        IBookFileRepository BookFile { get; }
+        IBookFormatRepository BookFormat { get; }
+        IBookImageRepository BookImage { get; }
+        IBookMetadataRepository BookMetadata { get; }
+        ICategoryRepository Category { get; }
+        IBookAuthorRepository BookAuthor { get; }
+        IBookCategoryRepository BookCategory { get; }
         IGenericRepository<EmailVerificationToken> EmailVerificationTokens { get; }
         
         

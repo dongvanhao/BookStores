@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: Core/BookStore.API/Dockerfile
+    depends_on:
+      - sqlserver
+      - minio
     environment:
       ASPNETCORE_ENVIRONMENT: Development
 
@@ -28,14 +31,25 @@ services:
       - "5000:8080"
 
   sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: ${SA_PASSWORD}
+      SA_PASSWORD: "${SA_PASSWORD}"
+    volumes:
+      - sql_data:/var/opt/mssql
 
   minio:
+    image: minio/minio
+    command: server /data --console-address ":9090"
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET}
     ports:
       - "9000:9000"
       - "9090:9090"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  sql_data:
+  minio_data:

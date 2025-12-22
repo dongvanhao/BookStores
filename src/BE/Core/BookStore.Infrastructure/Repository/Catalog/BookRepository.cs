@@ -11,44 +11,39 @@ using System.Threading.Tasks;
 
 namespace BookStore.Infrastructure.Repository.Catalog
 {
-    public class BookRepository : IBookRepository
+    public class BookRepository : GenericRepository<Book>,IBookRepository
     {
         private readonly AppDbContext _context;
-        public BookRepository(AppDbContext context)
+        public BookRepository(AppDbContext context) : base(context)
         {
-            _context = context;
         }
 
-        public async Task AddAsync(Book book)
+        public async Task<bool> ExistsByISBNAsync(string isbn)
         {
-            await _context.Books.AddAsync(book);
-        }
-
-        public async Task DeleteAsync(Book book)
-        {
-            _context.Books.Remove(book);
-        }
-
-        public async Task<Book?> GetByIdAsync(Guid id)
-        {
-            return await _context.Books.FindAsync(id);
+            return await _dbSet.AnyAsync(x => x.ISBN == isbn);
         }
 
         public async Task<Book?> GetDetailAsync(Guid id)
         {
-            return await _context.Books
-                .Include(b => b.Publisher)
-                .Include(b => b.BookAuthors)
-                    .ThenInclude(ba => ba.Author)
-                .Include(b => b.BookCategories)
-                    .ThenInclude(bc => bc.Category)
-                .Include(b => b.Images)
-                .Include(b => b.Files)
-                .Include(b => b.Metadata)
-                .Include(b => b.Prices)
-                .Include(b => b.StockItem)
-                .Include(b => b.Reviews)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            return await _dbSet
+                .Include(x => x.Publisher)
+                .Include(x => x.BookAuthors).ThenInclude(x => x.Author)
+                .Include(x => x.BookCategories).ThenInclude(x => x.Category)
+                .Include(x => x.Images)
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
+        public async Task<IReadOnlyList<Book>> GetPagedAsync(int skip, int take)
+        {
+            return await _dbSet
+                .Include(x => x.Publisher)
+                .Include(x => x.BookAuthors).ThenInclude(x => x.Author)
+                .Include(x => x.BookCategories).ThenInclude(x => x.Category)
+                .OrderByDescending(x => x.PublicationYear)
+                .Skip(skip)
+                .Take(take)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
     }
 }

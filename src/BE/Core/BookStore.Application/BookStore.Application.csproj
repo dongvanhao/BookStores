@@ -19,11 +19,4 @@
     <ProjectReference Include="..\BookStore.Domain\BookStore.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Mappers\Book\" />
-    <Folder Include="Mappers\Cart\" />
-    <Folder Include="Mappers\User\" />
-    <Folder Include="Mappers\Order\" />
-  </ItemGroup>
-
 </Project>

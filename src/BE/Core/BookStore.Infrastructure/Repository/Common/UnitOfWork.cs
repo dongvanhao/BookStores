@@ -1,4 +1,5 @@
-﻿using BookStore.Domain.Entities.Identity;
+﻿using BookStore.Domain.Entities.Catalog;
+using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
@@ -24,8 +25,17 @@ namespace BookStore.Infrastructure.Repository.Common
         public IUserRoleRepository UserRoles { get; }
         public IRolePermissionRepository RolePermissions { get; }
 
+        //catalog
         public IBookRepository Books { get; }
         public IPublisherRepository Publishers { get; }
+        public IAuthorRepository Author { get; }
+        public IBookFileRepository BookFile { get; }
+        public IBookFormatRepository BookFormat { get; }
+        public IBookImageRepository BookImage { get; }
+        public IBookMetadataRepository BookMetadata { get; }
+        public ICategoryRepository Category { get; }
+        public IBookAuthorRepository BookAuthor { get; }
+        public IBookCategoryRepository BookCategory { get; }
         public UnitOfWork(
      AppDbContext ctx,
          IUserRepository users,
@@ -38,7 +48,19 @@ namespace BookStore.Infrastructure.Repository.Common
          IRolePermissionRepository rolePermissions,
          //catalog
          IBookRepository books,
-         IPublisherRepository publisher
+         IPublisherRepository publisher,
+         IBookFormatRepository bookFormat,
+         IAuthorRepository author,
+         IBookFileRepository bookFile,
+         IBookImageRepository bookImage,
+         IBookMetadataRepository bookMetadata,
+         ICategoryRepository category,
+         IBookAuthorRepository bookauthor,
+         IBookCategoryRepository bookCategory
+
+
+
+
            )
         {
             _ctx = ctx;
@@ -54,7 +76,15 @@ namespace BookStore.Infrastructure.Repository.Common
             RolePermissions = rolePermissions;
 
             Books = books;
-            publisher = publisher;
+            Publishers = publisher;
+            BookFormat = bookFormat;
+            Author = author;
+            BookFile = bookFile;
+            BookImage = bookImage;
+            BookMetadata = bookMetadata;
+            Category = category;
+            BookAuthor = bookauthor;
+            BookCategory = bookCategory;
         }
 
 
