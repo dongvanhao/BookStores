@@ -1,6 +1,7 @@
 ﻿using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Identity;
+using BookStore.Domain.IRepository.Ordering___Payment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,9 +38,21 @@ namespace BookStore.Domain.IRepository.Common
         ICategoryRepository Category { get; }
         IBookAuthorRepository BookAuthor { get; }
         IBookCategoryRepository BookCategory { get; }
+        //Ordering & Payment
+        ICartRepository Cart { get; }
+        ICartItemRepository CartItem { get; }
+        IOrderRepository Order { get; }
+        IOrderItemRepository OrderItem { get; }
+        IPaymentTransactionRepository PaymentTransaction { get; }
+        IOrderStatusLogRepository OrderStatusLog { get; }
+        IOrderHistoryRepository OrderHistory { get; }
+        IRefundRepository Refund { get; }
+        IPaymentMethodRepository PaymentMethod { get; }
         IGenericRepository<EmailVerificationToken> EmailVerificationTokens { get; }
+
         
-        
+
+
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);// Phương thức SaveChanges cho các nghiệp vụ KHÔNG cần transaction
         Task ExecuteTransactionAsync(Func<Task> action); // Phương thức thực thi các nghiệp vụ có transaction
     }

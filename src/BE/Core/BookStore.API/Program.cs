@@ -5,6 +5,7 @@ using BookStore.Application.IService.Catalog.Category;
 using BookStore.Application.IService.Catalog.Publisher;
 using BookStore.Application.IService.Chatbot;
 using BookStore.Application.IService.Identity;
+using BookStore.Application.IService.Ordering_Payment;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Options;
 using BookStore.Application.Services.Catalog;
@@ -15,15 +16,18 @@ using BookStore.Application.Services.Catalog.Publisher;
 using BookStore.Application.Services.Chatbot;
 using BookStore.Application.Services.Identity;
 using BookStore.Application.Services.IDentity;
+using BookStore.Application.Services.Ordering_Payment;
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
+using BookStore.Domain.IRepository.Ordering___Payment;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Data.DataSeeder;
 using BookStore.Infrastructure.MinIO;
 using BookStore.Infrastructure.Repository.Catalog;
 using BookStore.Infrastructure.Repository.Common;
 using BookStore.Infrastructure.Repository.Identity;
+using BookStore.Infrastructure.Repository.Ordering___Payment;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -76,7 +80,16 @@ builder.Services.AddScoped<IBookMetadataRepository, BookMetadataRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IBookAuthorRepository, BookAuthorRepository>();
 builder.Services.AddScoped<IBookCategoryRepository, BookCategoryRepository>();
-
+//Order&Payment Repositories
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
+builder.Services.AddScoped<IOrderHistoryRepository, OrderHistoryRepository>();
+builder.Services.AddScoped<IOrderStatusLogRepository, OrderStatusLogRepository>();
+builder.Services.AddScoped<IRefundRepository, RefundRepository>();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
@@ -96,6 +109,16 @@ builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBookAuthorService, BookAuthorService>();
 builder.Services.AddScoped<IBookCategoryService, BookCategoryService>();
+//Order&Payment Services
+
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IRefundService, RefundService>();
+builder.Services.AddScoped<IOrderHistoryService, OrderHistoryService>();
+builder.Services.AddScoped<IOrderStatusLogService, OrderStatusLogService>();
+builder.Services.AddScoped<ICartItemService,CartItemService>();
 
 //Gemini Service
 builder.Services.AddScoped<IGeminiService, GeminiService>();
