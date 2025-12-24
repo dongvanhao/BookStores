@@ -16,6 +16,7 @@ namespace BookStore.Infrastructure.Repository.Catalog
         private readonly AppDbContext _context;
         public BookRepository(AppDbContext context) : base(context)
         {
+            _context = context;
         }
 
         public async Task<bool> ExistsByISBNAsync(string isbn)
@@ -44,6 +45,54 @@ namespace BookStore.Infrastructure.Repository.Catalog
                 .AsNoTracking()
                 .ToListAsync();
         }
+        public async Task<IReadOnlyList<Book>> GetBooksForChatbotAsync(
+    int take,
+    CancellationToken cancellationToken = default)
+        {
+            return await _context.Books
+                .AsNoTracking()
+                .Where(b => b.IsAvailable)
+                .OrderByDescending(b => b.PublicationYear)
+                .Take(take)
+                .Select(b => new Book
+                {
+                    Id = b.Id,
+                    Title = b.Title,
+                    Description = b.Description,
+                    PublicationYear = b.PublicationYear,
+
+                    Publisher = b.Publisher == null
+                        ? null!
+                        : new Publisher
+                        {
+                            Name = b.Publisher.Name
+                        },
+
+                    BookAuthors = b.BookAuthors
+                        .Where(ba => ba.Author != null)
+                        .Select(ba => new BookAuthor
+                        {
+                            Author = new Author
+                            {
+                                Name = ba.Author!.Name
+                            }
+                        })
+                        .ToList(),
+
+                    BookCategories = b.BookCategories
+                        .Where(bc => bc.Category != null)
+                        .Select(bc => new BookCategory
+                        {
+                            Category = new Category
+                            {
+                                Name = bc.Category!.Name
+                            }
+                        })
+                        .ToList()
+                })
+                .ToListAsync(cancellationToken);
+        }
+
 
     }
 }
