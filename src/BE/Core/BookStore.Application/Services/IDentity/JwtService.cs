@@ -23,8 +23,9 @@ namespace BookStore.Application.Services.IDentity
         {
             var claims = new List<Claim>
     {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email)
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email)
     };
 
             // Fix crash when roles = null
