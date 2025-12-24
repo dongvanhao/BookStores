@@ -3,6 +3,7 @@ using BookStore.Application.IService.Catalog.Author;
 using BookStore.Application.IService.Catalog.Book;
 using BookStore.Application.IService.Catalog.Category;
 using BookStore.Application.IService.Catalog.Publisher;
+using BookStore.Application.IService.Chatbot;
 using BookStore.Application.IService.Identity;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Options;
@@ -11,6 +12,7 @@ using BookStore.Application.Services.Catalog.Author;
 using BookStore.Application.Services.Catalog.Book;
 using BookStore.Application.Services.Catalog.Category;
 using BookStore.Application.Services.Catalog.Publisher;
+using BookStore.Application.Services.Chatbot;
 using BookStore.Application.Services.Identity;
 using BookStore.Application.Services.IDentity;
 using BookStore.Domain.IRepository.Catalog;
@@ -94,6 +96,11 @@ builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBookAuthorService, BookAuthorService>();
 builder.Services.AddScoped<IBookCategoryService, BookCategoryService>();
+
+//Gemini Service
+builder.Services.AddScoped<IGeminiService, GeminiService>();
+builder.Services.AddScoped<IChatBotService, ChatBotService>();
+
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
 
@@ -188,6 +195,11 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
         .Build();
 });
 builder.Services.AddScoped<IStorageService, MinioStorageService>();
+// Gemini Options
+builder.Services.Configure<GeminiOptions>(
+    builder.Configuration.GetSection("Gemini"));
+
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

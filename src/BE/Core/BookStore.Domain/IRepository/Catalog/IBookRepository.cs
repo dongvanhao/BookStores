@@ -13,5 +13,8 @@ namespace BookStore.Domain.IRepository.Catalog
         Task<bool> ExistsByISBNAsync(string isbn);
         Task<Book?> GetDetailAsync(Guid id);
         Task<IReadOnlyList<Book>> GetPagedAsync(int skip, int take);
+        Task<IReadOnlyList<Book>> GetBooksForChatbotAsync(
+        int take,
+        CancellationToken cancellationToken = default);
     }
 }
