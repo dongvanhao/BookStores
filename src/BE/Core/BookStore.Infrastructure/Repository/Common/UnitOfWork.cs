@@ -3,6 +3,7 @@ using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
+using BookStore.Domain.IRepository.Ordering___Payment;
 using BookStore.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -36,6 +37,17 @@ namespace BookStore.Infrastructure.Repository.Common
         public ICategoryRepository Category { get; }
         public IBookAuthorRepository BookAuthor { get; }
         public IBookCategoryRepository BookCategory { get; }
+
+        //Ordering & Payment
+        public ICartRepository Cart { get; }
+        public ICartItemRepository CartItem { get; }
+        public IOrderRepository Order { get; }
+        public IOrderItemRepository OrderItem { get; }
+        public IPaymentTransactionRepository PaymentTransaction { get; }
+        public IOrderStatusLogRepository OrderStatusLog { get; }
+        public IOrderHistoryRepository OrderHistory { get; }
+        public IRefundRepository Refund { get; }
+        public IPaymentMethodRepository PaymentMethod { get; }
         public UnitOfWork(
      AppDbContext ctx,
          IUserRepository users,
@@ -56,9 +68,19 @@ namespace BookStore.Infrastructure.Repository.Common
          IBookMetadataRepository bookMetadata,
          ICategoryRepository category,
          IBookAuthorRepository bookauthor,
-         IBookCategoryRepository bookCategory
+         IBookCategoryRepository bookCategory,
+         
 
-
+        //Ordering & Payment
+        ICartRepository cart,
+        ICartItemRepository cartItem,
+        IOrderRepository order,
+        IOrderItemRepository orderItem,
+        IPaymentTransactionRepository paymentTransaction,
+        IOrderStatusLogRepository orderStatusLog,
+        IOrderHistoryRepository orderHistory,
+        IRefundRepository refund,
+        IPaymentMethodRepository paymentMethod
 
 
            )
@@ -85,6 +107,15 @@ namespace BookStore.Infrastructure.Repository.Common
             Category = category;
             BookAuthor = bookauthor;
             BookCategory = bookCategory;
+            Cart = cart;
+            CartItem = cartItem;
+            Order = order;
+            OrderItem = orderItem;
+            PaymentTransaction = paymentTransaction;
+            OrderStatusLog = orderStatusLog;
+            OrderHistory = orderHistory;
+            Refund = refund;
+            PaymentMethod = paymentMethod;
         }
 
 
