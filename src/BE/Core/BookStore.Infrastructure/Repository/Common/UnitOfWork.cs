@@ -25,6 +25,10 @@ namespace BookStore.Infrastructure.Repository.Common
         public IPermissionRepository Permissions { get; }
         public IUserRoleRepository UserRoles { get; }
         public IRolePermissionRepository RolePermissions { get; }
+        //User Related
+        public IUserProfileRepository UserProfiles { get; }
+        public IUserAddressRepository UserAddresses { get; }
+        public IUserDeviceRepository UserDevices { get; }
 
         //catalog
         public IBookRepository Books { get; }
@@ -58,6 +62,10 @@ namespace BookStore.Infrastructure.Repository.Common
          IPermissionRepository permissions,
          IUserRoleRepository userRoles,
          IRolePermissionRepository rolePermissions,
+         //User Related
+        IUserProfileRepository userProfiles,
+        IUserAddressRepository userAddresses,
+        IUserDeviceRepository userDevices,
          //catalog
          IBookRepository books,
          IPublisherRepository publisher,
@@ -91,6 +99,9 @@ namespace BookStore.Infrastructure.Repository.Common
             EmailVerificationTokens = emailVerificationTokens;
             RefreshTokens = refreshTokens;
             PasswordResetTokens = passwordResetTokens;
+            UserProfiles = userProfiles;
+            UserAddresses = userAddresses;
+            UserDevices = userDevices;
 
             Roles = roles;
             Permissions = permissions;

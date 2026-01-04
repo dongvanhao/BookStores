@@ -26,6 +26,10 @@ namespace BookStore.Domain.IRepository.Common
         IPermissionRepository Permissions { get; }
         IUserRoleRepository UserRoles { get; }
         IRolePermissionRepository RolePermissions { get; }
+        //User Related
+        IUserProfileRepository UserProfiles { get; }
+        IUserAddressRepository UserAddresses { get; }
+        IUserDeviceRepository UserDevices { get; }
 
         //Catalog
         IBookRepository Books { get; }
