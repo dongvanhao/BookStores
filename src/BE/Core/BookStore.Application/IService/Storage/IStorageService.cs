@@ -1,4 +1,5 @@
 ﻿using BookStore.Shared.Common;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,5 +23,6 @@ namespace BookStore.Application.IService.Storage
         //Xoá file khỏi objectkey.
         Task<BaseResult<bool>> DeleteAsync(string objectKey);
         Task<BaseResult<object>> UpdateAsync(string objectKey, Stream stream, long size, string contentType, string fileName);
+        
     }
 }

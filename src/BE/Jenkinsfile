@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = "localhost:5000"
+        REGISTRY = "registry.local:5000"
         IMAGE_NAME = "bookstore/api"
-        TAG = "latest"
+        TAG = "${BUILD_NUMBER}"
     }
 
     stages {
 
-        stage('Build Docker Image') {
+        stage('Build Image') {
             steps {
                 sh '''
                 cd src/BE
@@ -36,7 +36,19 @@ pipeline {
 
         stage('Push Image') {
             steps {
-                sh 'docker push $REGISTRY/$IMAGE_NAME:$TAG'
+                sh '''
+                docker push $REGISTRY/$IMAGE_NAME:$TAG
+                docker tag $REGISTRY/$IMAGE_NAME:$TAG $REGISTRY/$IMAGE_NAME:latest
+                docker push $REGISTRY/$IMAGE_NAME:latest
+                '''
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                sh '''
+                docker rmi $REGISTRY/$IMAGE_NAME:$TAG || true
+                '''
             }
         }
     }
