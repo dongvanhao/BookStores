@@ -88,7 +88,6 @@ namespace BookStore.Application.Tests.Identity
             result.IsSuccess.Should().BeTrue();
 
             _profiles.Verify(x => x.AddAsync(It.IsAny<UserProfile>()), Times.Once);
-            _profiles.Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Once);
         }
         [Fact]
         public async Task UpdateMyProfile_ExistingProfile_ShouldUpdate()

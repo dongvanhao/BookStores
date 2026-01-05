@@ -224,7 +224,11 @@ namespace BookStore.Application.Services.IDentity
                     {
                         Email = dto.Email,
                         PasswordHash = _hashing.HashPassword(dto.Password),
-                        EmailConfirmed = true  //(Mặc định đã xác thực)
+                        EmailConfirmed = true,  //(Mặc định đã xác thực)
+                        Profiles = new UserProfile
+                        {
+                            FullName = dto.Email
+                        }
                     };
 
                     await _uow.Users.AddAsync(user);

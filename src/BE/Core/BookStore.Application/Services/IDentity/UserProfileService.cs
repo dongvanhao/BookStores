@@ -43,7 +43,6 @@ namespace BookStore.Application.Services.IDentity
                 // LẦN ĐẦU TẠO PROFILE
                 profile = new UserProfile
                 {
-                    Id = Guid.NewGuid(),
                     UserId = userId
                 };
 
@@ -57,7 +56,6 @@ namespace BookStore.Application.Services.IDentity
             profile.PhoneNumber = dto.PhoneNumber;
             profile.Bio = dto.Bio;
 
-            _uow.UserProfiles.Update(profile);
             await _uow.SaveChangesAsync();
 
             return BaseResult<bool>.Ok(true);
@@ -78,7 +76,6 @@ namespace BookStore.Application.Services.IDentity
             {
                 profile = new UserProfile
                 {
-                    Id = Guid.NewGuid(),
                     UserId = userId
                 };
                 await _uow.UserProfiles.AddAsync(profile);
@@ -99,7 +96,6 @@ namespace BookStore.Application.Services.IDentity
                 return BaseResult<string>.Fail(uploadResult.Error!);
 
             profile.AvatarUrl = uploadResult.Value!;
-            _uow.UserProfiles.Update(profile);
             await _uow.SaveChangesAsync();
 
             return BaseResult<string>.Ok(profile.AvatarUrl);
