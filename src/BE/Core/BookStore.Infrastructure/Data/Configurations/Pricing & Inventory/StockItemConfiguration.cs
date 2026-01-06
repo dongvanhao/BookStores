@@ -1,5 +1,4 @@
-﻿using BookStore.Domain.Entities.Pricing___Inventory;
-using BookStore.Domain.Entities.Pricing_Inventory;
+﻿using BookStore.Domain.Entities.Pricing_Inventory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -27,9 +26,10 @@ namespace BookStore.Infrastructure.Configurations.Pricing_Inventory
 
             // Quan hệ với Book (Catalog)
             builder.HasOne(x => x.Book)
-                   .WithMany() // không cần navigation ngược từ Book
-                   .HasForeignKey(x => x.BookId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                    .WithOne(b => b.StockItem)
+                    .HasForeignKey<StockItem>(x => x.BookId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
 
             // Quan hệ với Warehouse
             builder.HasOne<Warehouse>()

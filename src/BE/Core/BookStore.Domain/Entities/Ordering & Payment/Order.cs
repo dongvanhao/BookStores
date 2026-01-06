@@ -1,6 +1,6 @@
 ﻿using BookStore.Domain.Entities.Identity;
-using BookStore.Domain.Entities.Ordering___Payment;
-using BookStore.Domain.Entities.Pricing___Inventory;
+using BookStore.Domain.Entities.Ordering_Payment;
+using BookStore.Domain.Entities.Pricing_Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,8 +31,7 @@ namespace BookStore.Domain.Entities.Ordering
         public virtual ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 
         // 🔗 1-1: Địa chỉ giao hàng riêng cho đơn
-        public Guid AddressId { get; set; }
-        public virtual OrderAddress Address { get; set; } = null!;
+        public virtual OrderAddress OrderAddress { get; set; } = null!;
 
         // 🔗 1-1: Giao dịch thanh toán
         public virtual PaymentTransaction? PaymentTransaction { get; set; }

@@ -1,5 +1,5 @@
 ﻿using BookStore.Application.Dtos.Ordering_Payment.Order;
-using BookStore.Domain.Entities.Ordering___Payment;
+using BookStore.Domain.Entities.Ordering_Payment;
 using System;
 using System.Collections.Generic;
 using System.Linq;

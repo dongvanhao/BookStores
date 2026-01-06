@@ -3,7 +3,7 @@ using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
-using BookStore.Domain.IRepository.Ordering___Payment;
+using BookStore.Domain.IRepository.Ordering_Payment;
 using BookStore.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;

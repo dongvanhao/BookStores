@@ -1,5 +1,5 @@
 ﻿using BookStore.Domain.Entities.Ordering;
-using BookStore.Domain.IRepository.Ordering___Payment;
+using BookStore.Domain.IRepository.Ordering_Payment;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Repository.Common;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookStore.Infrastructure.Repository.Ordering___Payment
+namespace BookStore.Infrastructure.Repository.Ordering_Payment
 {
     public class OrderRepository : GenericRepository<Order>, IOrderRepository
     {
@@ -31,7 +31,7 @@ namespace BookStore.Infrastructure.Repository.Ordering___Payment
         {
             return await _context.Set<Order>()
                 .Include(o => o.Items)
-                .Include(o => o.Address)
+                .Include(o => o.OrderAddress)
                 .Include(o => o.PaymentTransaction)
                 .Include(o => o.StatusLogs)
                 .Include(o => o.Histories)

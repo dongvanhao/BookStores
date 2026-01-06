@@ -1,7 +1,7 @@
 ﻿using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Identity;
-using BookStore.Domain.IRepository.Ordering___Payment;
+using BookStore.Domain.IRepository.Ordering_Payment;
 using System;
 using System.Collections.Generic;
 using System.Linq;

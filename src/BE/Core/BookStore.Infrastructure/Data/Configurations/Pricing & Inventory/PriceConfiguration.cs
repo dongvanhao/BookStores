@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Pricing___Inventory;
+﻿using BookStore.Domain.Entities.Pricing_Inventory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

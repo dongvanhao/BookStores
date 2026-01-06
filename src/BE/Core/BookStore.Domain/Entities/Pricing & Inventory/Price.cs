@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookStore.Domain.Entities.Pricing___Inventory
+namespace BookStore.Domain.Entities.Pricing_Inventory
 {
     public class Price
     {

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookStore.Domain.IRepository.Ordering___Payment
+namespace BookStore.Domain.IRepository.Ordering_Payment
 {
     public interface ICartRepository : IGenericRepository<Cart>
     {
