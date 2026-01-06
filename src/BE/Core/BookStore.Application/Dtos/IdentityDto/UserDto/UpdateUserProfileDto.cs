@@ -8,7 +8,7 @@ namespace BookStore.Application.Dtos.IdentityDto.UserDto
 {
     public class UpdateUserProfileDto
     {
-        public string FullName { get; set; } = default!;
+        public string FullName { get; set; } 
         public DateTime? DateOfBirth { get; set; }
         public string? Gender { get; set; }
         public string? AvatarUrl { get; set; }

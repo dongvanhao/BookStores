@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Analytics___Activity;
+﻿using BookStore.Domain.Entities.Analytics_Activity;
 using BookStore.Domain.Entities.Common;
 using BookStore.Domain.Entities.Ordering;
 using BookStore.Domain.Entities.Rental;

@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Analytics___Activity;
+﻿using BookStore.Domain.Entities.Analytics_Activity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

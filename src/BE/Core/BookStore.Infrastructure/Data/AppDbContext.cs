@@ -1,16 +1,17 @@
 ﻿using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.Entities.Catalog;
-using BookStore.Domain.Entities.Pricing___Inventory;
+using BookStore.Domain.Entities.Pricing_Inventory;
 using BookStore.Domain.Entities.Common;
 using BookStore.Domain.Entities.Ordering;
-using BookStore.Domain.Entities.Ordering___Payment;
+using BookStore.Domain.Entities.Ordering_Payment;
 using BookStore.Domain.Entities.Shipping;
 using BookStore.Domain.Entities.Rental;
-using BookStore.Domain.Entities.Analytics___Activity;
+using BookStore.Domain.Entities.Analytics_Activity;
 using BookStore.Domain.Entities.System;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using BookStore.Domain.Entities.Pricing_Inventory;
+using BookStore.Domain.Entities.Ordering_Payment;
 
 namespace BookStore.Infrastructure.Data
 {

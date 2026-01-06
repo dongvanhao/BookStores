@@ -1,5 +1,5 @@
-﻿using BookStore.Domain.Entities.Ordering___Payment;
-using BookStore.Domain.IRepository.Ordering___Payment;
+﻿using BookStore.Domain.Entities.Ordering_Payment;
+using BookStore.Domain.IRepository.Ordering_Payment;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Repository.Common;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookStore.Infrastructure.Repository.Ordering___Payment
+namespace BookStore.Infrastructure.Repository.Ordering_Payment
 {
     public class OrderHistoryRepository
         : GenericRepository<OrderHistory>, IOrderHistoryRepository

@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookStore.Domain.Entities.Ordering___Payment
+namespace BookStore.Domain.Entities.Ordering_Payment
 {
     public class OrderAddress
     {
         public Guid Id { get; set; }
-
+        public Guid OrderId { get; set; }
         public string RecipientName { get; set; } = null!;     // Người nhận hàng
         public string PhoneNumber { get; set; } = null!;       // Số điện thoại liên hệ
         public string Province { get; set; } = null!;          // Tỉnh/Thành phố

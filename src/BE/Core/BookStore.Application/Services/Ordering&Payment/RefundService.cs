@@ -1,7 +1,7 @@
 ﻿using BookStore.Application.Dtos.Ordering_Payment.Order;
 using BookStore.Application.IService.Ordering_Payment;
 using BookStore.Application.Mappers.Ordering_Payment;
-using BookStore.Domain.Entities.Ordering___Payment;
+using BookStore.Domain.Entities.Ordering_Payment;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
 using System;

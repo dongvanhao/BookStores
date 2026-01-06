@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Ordering___Payment;
+﻿using BookStore.Domain.Entities.Ordering_Payment;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
