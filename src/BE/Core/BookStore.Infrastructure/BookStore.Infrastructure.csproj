@@ -37,7 +37,6 @@
     <Folder Include="Repository\System\" />
     <Folder Include="Repository\Shipping\" />
     <Folder Include="Repository\Rental\" />
-    <Folder Include="Repository\Pricing &amp; Inventory\" />
   </ItemGroup>
 
 </Project>
