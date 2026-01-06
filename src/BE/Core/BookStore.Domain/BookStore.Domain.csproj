@@ -11,7 +11,6 @@
     <Folder Include="IRepository\System\" />
     <Folder Include="IRepository\Shipping\" />
     <Folder Include="IRepository\Rental\" />
-    <Folder Include="IRepository\Pricing &amp; Inventory\" />
   </ItemGroup>
 
   <ItemGroup>

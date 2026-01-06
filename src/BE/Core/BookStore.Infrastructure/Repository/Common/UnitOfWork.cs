@@ -4,6 +4,7 @@ using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
 using BookStore.Domain.IRepository.Ordering_Payment;
+using BookStore.Domain.IRepository.Pricing___Inventory;
 using BookStore.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -52,6 +53,13 @@ namespace BookStore.Infrastructure.Repository.Common
         public IOrderHistoryRepository OrderHistory { get; }
         public IRefundRepository Refund { get; }
         public IPaymentMethodRepository PaymentMethod { get; }
+        //Pricing & Inventory
+        public ICouponRepository Coupon { get; }
+        public IDiscountRepository Discount { get; }
+        public IInventoryTransactionRepository InventoryTransaction { get; }
+        public IPriceRepository Price { get; }
+        public IStockItemRepository StockItem { get; }
+        public IWarehouseRepository Warehouse { get; }
         public UnitOfWork(
      AppDbContext ctx,
          IUserRepository users,
@@ -88,7 +96,14 @@ namespace BookStore.Infrastructure.Repository.Common
         IOrderStatusLogRepository orderStatusLog,
         IOrderHistoryRepository orderHistory,
         IRefundRepository refund,
-        IPaymentMethodRepository paymentMethod
+        IPaymentMethodRepository paymentMethod,
+        // Pricing & Inventory
+        ICouponRepository coupon,
+        IDiscountRepository discount,
+        IInventoryTransactionRepository inventoryTransaction,
+        IPriceRepository price,
+        IStockItemRepository stockItem,
+        IWarehouseRepository warehouse
 
 
            )
@@ -127,6 +142,12 @@ namespace BookStore.Infrastructure.Repository.Common
             OrderHistory = orderHistory;
             Refund = refund;
             PaymentMethod = paymentMethod;
+            Coupon = coupon;
+            Discount = discount;
+            InventoryTransaction = inventoryTransaction;
+            Price = price;
+            StockItem = stockItem;
+            Warehouse = warehouse;
         }
 
 

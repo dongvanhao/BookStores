@@ -6,6 +6,7 @@ using BookStore.Application.IService.Catalog.Publisher;
 using BookStore.Application.IService.Chatbot;
 using BookStore.Application.IService.Identity;
 using BookStore.Application.IService.Ordering_Payment;
+using BookStore.Application.IService.Pricing_Inventory;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Options;
 using BookStore.Application.Services.Catalog;
@@ -17,10 +18,12 @@ using BookStore.Application.Services.Chatbot;
 using BookStore.Application.Services.Identity;
 using BookStore.Application.Services.IDentity;
 using BookStore.Application.Services.Ordering_Payment;
+using BookStore.Application.Services.Pricing_Inventory;
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
 using BookStore.Domain.IRepository.Ordering_Payment;
+using BookStore.Domain.IRepository.Pricing___Inventory;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Data.DataSeeder;
 using BookStore.Infrastructure.MinIO;
@@ -28,6 +31,7 @@ using BookStore.Infrastructure.Repository.Catalog;
 using BookStore.Infrastructure.Repository.Common;
 using BookStore.Infrastructure.Repository.Identity;
 using BookStore.Infrastructure.Repository.Ordering_Payment;
+using BookStore.Infrastructure.Repository.Pricing___Inventory;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -94,7 +98,13 @@ builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
 builder.Services.AddScoped<IOrderHistoryRepository, OrderHistoryRepository>();
 builder.Services.AddScoped<IOrderStatusLogRepository, OrderStatusLogRepository>();
 builder.Services.AddScoped<IRefundRepository, RefundRepository>();
-
+//Pricing & Inventory Repositories
+builder.Services.AddScoped<ICouponRepository, CouponRepository>();
+builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
+builder.Services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
+builder.Services.AddScoped<IPriceRepository, PriceRepository>();
+builder.Services.AddScoped<IStockItemRepository, StockItemRepository>();
+builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -127,6 +137,13 @@ builder.Services.AddScoped<IOrderHistoryService, OrderHistoryService>();
 builder.Services.AddScoped<IOrderStatusLogService, OrderStatusLogService>();
 builder.Services.AddScoped<ICartItemService,CartItemService>();
 
+//Pricing & Inventory Services
+builder.Services.AddScoped<ICouponService, CouponService>();
+builder.Services.AddScoped<IDiscountService, DiscountService>();
+builder.Services.AddScoped<IInventoryTransactionService, InventoryTransactionService>();
+builder.Services.AddScoped<IPriceService, PriceService>();
+builder.Services.AddScoped<IStockItemService, StockItemService>();
+builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 //Gemini Service
 builder.Services.AddScoped<IGeminiService, GeminiService>();
 builder.Services.AddScoped<IChatBotService, ChatBotService>();
