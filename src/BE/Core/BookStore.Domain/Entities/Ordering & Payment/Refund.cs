@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookStore.Domain.Entities.Ordering___Payment
+namespace BookStore.Domain.Entities.Ordering_Payment
 {
     public class Refund
     {

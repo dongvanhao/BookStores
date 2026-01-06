@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Pricing___Inventory;
+﻿using BookStore.Domain.Entities.Pricing_Inventory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -28,11 +28,8 @@ namespace BookStore.Infrastructure.Configurations.Pricing_Inventory
             builder.Property(x => x.UpdatedAt)
                    .IsRequired(false);
 
-            // 1-n: Warehouse - StockItems
-            builder.HasMany(w => w.StockItems)
-                   .WithOne()
-                   .HasForeignKey(s => s.WarehouseId)
-                   .OnDelete(DeleteBehavior.Restrict);
+            // ❗ KHÔNG cấu hình quan hệ ở đây nữa
         }
     }
+
 }

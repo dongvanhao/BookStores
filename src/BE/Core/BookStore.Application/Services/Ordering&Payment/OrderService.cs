@@ -2,7 +2,7 @@
 using BookStore.Application.IService.Ordering_Payment;
 using BookStore.Application.Mappers.Ordering_Payment;
 using BookStore.Domain.Entities.Ordering;
-using BookStore.Domain.Entities.Ordering___Payment;
+using BookStore.Domain.Entities.Ordering_Payment;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
 using System;
@@ -91,7 +91,13 @@ namespace BookStore.Application.Services.Ordering_Payment
                     "Giỏ hàng trống",
                     ErrorType.Validation
                 );
-
+            var userAddress = await _uow.UserAddresses.GetByIdAsync(request.AddressId);
+            if (userAddress == null || userAddress.UserId != userId)
+                return BaseResult<CheckoutResponseDto>.Fail(
+                    "Checkout.InvalidAddress",
+                    "Địa chỉ không hợp lệ",
+                    ErrorType.Validation
+                );
             // 2️⃣ Tính tổng tiền
             var totalAmount = cart.Items.Sum(i => i.Quantity * i.UnitPrice);
 
@@ -112,8 +118,22 @@ namespace BookStore.Application.Services.Ordering_Payment
                 OrderNumber = GenerateOrderNumber(),
                 TotalAmount = totalAmount,
                 DiscountAmount = discount,
-                AddressId = request.AddressId
             };
+            var orderAddress = new OrderAddress
+            {
+                Id = Guid.NewGuid(),
+                OrderId = order.Id,
+
+                RecipientName = userAddress.ReipientName,
+                PhoneNumber = userAddress.PhoneNumber,
+                Province = userAddress.Povince,
+                District = userAddress.District,
+                Ward = userAddress.Ward,
+                Street = userAddress.StreetAddress
+            };
+
+            // 🔗 GẮN VÀO ORDER (quan trọng)
+            order.OrderAddress = orderAddress;
 
             // 5️⃣ Tạo OrderItem từ CartItem
             foreach (var cartItem in cart.Items)

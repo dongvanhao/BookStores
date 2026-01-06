@@ -18,7 +18,6 @@ namespace BookStore.Infrastructure.Repository.Identity
         public async Task<Domain.Entities.Identity.UserProfile?> GetByUserIdAsync(Guid userId)
         {
             return await _context.UserProfiles
-                .AsNoTracking()
                 .FirstOrDefaultAsync(up => up.UserId == userId);
         }
     }

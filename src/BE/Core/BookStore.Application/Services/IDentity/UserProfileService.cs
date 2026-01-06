@@ -49,12 +49,24 @@ namespace BookStore.Application.Services.IDentity
                 await _uow.UserProfiles.AddAsync(profile);
             }
 
-            profile.FullName = dto.FullName;
-            profile.DateOfBirth = dto.DateOfBirth;
-            profile.Gender = dto.Gender;
-            profile.AvatarUrl = dto.AvatarUrl;
-            profile.PhoneNumber = dto.PhoneNumber;
-            profile.Bio = dto.Bio;
+            if (dto.FullName != null)
+                profile.FullName = dto.FullName;
+
+            if (dto.DateOfBirth.HasValue)
+                profile.DateOfBirth = dto.DateOfBirth.Value;
+
+            if (dto.Gender != null)
+                profile.Gender = dto.Gender;
+
+            if (dto.AvatarUrl != null)
+                profile.AvatarUrl = dto.AvatarUrl;
+
+            if (dto.PhoneNumber != null)
+                profile.PhoneNumber = dto.PhoneNumber;
+
+            if (dto.Bio != null)
+                profile.Bio = dto.Bio;
+
 
             await _uow.SaveChangesAsync();
 

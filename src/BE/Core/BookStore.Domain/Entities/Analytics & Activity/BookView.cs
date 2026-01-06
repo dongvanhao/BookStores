@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookStore.Domain.Entities.Analytics___Activity
+namespace BookStore.Domain.Entities.Analytics_Activity
 {
     public class BookView
     {

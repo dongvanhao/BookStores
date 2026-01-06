@@ -1,5 +1,5 @@
 ﻿using BookStore.Domain.Entities.Ordering;
-using BookStore.Domain.Entities.Ordering___Payment;
+using BookStore.Domain.Entities.Ordering_Payment;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -53,10 +53,11 @@ namespace BookStore.Infrastructure.Data.Configurations.Ordering
                 .OnDelete(DeleteBehavior.Cascade);
 
             // 🔗 1-1: Order – OrderAddress
-            builder.HasOne(o => o.Address)
-                .WithOne(a => a.Order)
-                .HasForeignKey<Order>(o => o.AddressId)
-                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(o => o.OrderAddress)
+            .WithOne(a => a.Order)
+            .HasForeignKey<OrderAddress>(a => a.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
 
             // 🔗 1-1: Order – PaymentTransaction
             builder.HasOne(o => o.PaymentTransaction)
