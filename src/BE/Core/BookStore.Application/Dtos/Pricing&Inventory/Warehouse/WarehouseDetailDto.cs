@@ -1,0 +1,20 @@
+﻿using BookStore.Application.Dtos.Pricing_Inventory.StockItem;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BookStore.Application.Dtos.Pricing_Inventory.Warehouse
+{
+    public class WarehouseDetailDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string? Address { get; set; }
+        public string? Description { get; set; }
+
+        public IReadOnlyList<StockItemResponseDto> StockItems { get; set; }
+            = new List<StockItemResponseDto>();
+    }
+}

@@ -2,6 +2,7 @@
 using BookStore.Domain.IRepository.Catalog;
 using BookStore.Domain.IRepository.Identity;
 using BookStore.Domain.IRepository.Ordering_Payment;
+using BookStore.Domain.IRepository.Pricing___Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,6 +53,14 @@ namespace BookStore.Domain.IRepository.Common
         IOrderHistoryRepository OrderHistory { get; }
         IRefundRepository Refund { get; }
         IPaymentMethodRepository PaymentMethod { get; }
+
+        //Pricing& Inventory
+        ICouponRepository Coupon { get; }
+        IDiscountRepository Discount { get; }
+        IInventoryTransactionRepository InventoryTransaction { get; }
+        IPriceRepository Price { get; }
+        IStockItemRepository StockItem { get; }
+        IWarehouseRepository Warehouse { get; }
         IGenericRepository<EmailVerificationToken> EmailVerificationTokens { get; }
 
         
