@@ -1,5 +1,4 @@
-﻿using BookStore.Domain.Entities.Ordering;
-using BookStore.Domain.Entities.Ordering_Payment;
+using BookStore.Domain.Entities.Ordering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,47 +19,39 @@ namespace BookStore.Infrastructure.Data.Configurations.Ordering
             builder.HasIndex(o => o.OrderNumber).IsUnique();
 
             builder.Property(o => o.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20)
                 .IsRequired()
-                .HasMaxLength(50)
-                .HasDefaultValue("Pending");
+                .HasDefaultValue(OrderStatus.Pending);
 
-            builder.Property(o => o.TotalAmount)
+            builder.Property(o => o.SubTotal)
                 .HasColumnType("decimal(18,2)");
 
             builder.Property(o => o.DiscountAmount)
                 .HasColumnType("decimal(18,2)")
                 .HasDefaultValue(0);
 
+            builder.Ignore(o => o.FinalAmount);
+
             builder.Property(o => o.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            // 🔗 1-n: Order – OrderItem
             builder.HasMany(o => o.Items)
                 .WithOne(i => i.Order)
                 .HasForeignKey(i => i.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // 🔗 1-n: Order – OrderStatusLog
             builder.HasMany(o => o.StatusLogs)
                 .WithOne(s => s.Order)
                 .HasForeignKey(s => s.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // 🔗 1-n: Order – OrderHistory
-            builder.HasMany(o => o.Histories)
-                .WithOne(h => h.Order)
-                .HasForeignKey(h => h.OrderId)
+            builder.HasOne(o => o.ShippingAddress)
+                .WithOne(a => a.Order)
+                .HasForeignKey<OrderAddress>(a => a.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // 🔗 1-1: Order – OrderAddress
-            builder.HasOne(o => o.OrderAddress)
-            .WithOne(a => a.Order)
-            .HasForeignKey<OrderAddress>(a => a.OrderId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-
-            // 🔗 1-1: Order – PaymentTransaction
-            builder.HasOne(o => o.PaymentTransaction)
+            builder.HasOne(o => o.Payment)
                 .WithOne(p => p.Order)
                 .HasForeignKey<PaymentTransaction>(p => p.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);

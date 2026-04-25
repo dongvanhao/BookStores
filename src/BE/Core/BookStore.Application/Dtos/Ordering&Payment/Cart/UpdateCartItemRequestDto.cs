@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookStore.Application.Dtos.Ordering_Payment.Cart
 {
-    public class UpdateCartItemRequestDto
-    {
-        public int Quantity { get; set; }
-    }
+    public record UpdateCartItemRequestDto(
+        [Range(1, 100)] int Quantity
+    );
 }

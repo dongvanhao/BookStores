@@ -1,8 +1,7 @@
-﻿using BookStore.Application.Dtos.CatalogDto.Author;
+using BookStore.Application.Dtos.CatalogDto.Author;
 using BookStore.Application.Dtos.CatalogDto.Category;
 using BookStore.Application.IService.Catalog.Category;
 using BookStore.Application.Mappers.Catalog.Category;
-using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
 using BookStore.Shared.Utilities;
 using System;
@@ -10,15 +9,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookStore.Domain.IRepository.Common;
+using BookStore.Domain.IRepository.Catalog;
 
 namespace BookStore.Application.Services.Catalog.Category
 {
     public class CategoryService : ICategoryService
     {
-        private readonly IUnitOfWork _uow;
-        public CategoryService(IUnitOfWork uow)
+        private readonly ICategoryRepository _categories;
+        private readonly IDbSession _session;
+        public CategoryService(ICategoryRepository categories, IDbSession session)
         {
-            _uow = uow;
+            _categories = categories;
+            _session = session;
         }
         public async Task<BaseResult<CategoryResponseDto>> CreateAsync(CreateCategoryRequestDto request)
         {
@@ -28,10 +31,10 @@ namespace BookStore.Application.Services.Catalog.Category
 
             if (request.ParentId.HasValue)
             {
-                var parentCategory = await _uow.Category.GetByIdAsync(request.ParentId.Value);
+                var parentCategory = await _categories.GetByIdAsync(request.ParentId.Value);
                 if (parentCategory is null)
                     return BaseResult<CategoryResponseDto>.Fail("Category.ParentNotFound",
-                                                                 "Danh mục cha không tồn tại", ErrorType.NotFound);
+                                                                 "Parent category not found.", ErrorType.NotFound);
             }
 
             var category = new Domain.Entities.Catalog.Category
@@ -42,14 +45,14 @@ namespace BookStore.Application.Services.Catalog.Category
                 ParentId = request.ParentId
             };
 
-            await _uow.Category.AddAsync(category);
-            await _uow.SaveChangesAsync();
+            await _categories.AddAsync(category);
+            await _session.SaveChangesAsync();
             return BaseResult<CategoryResponseDto>.Ok(category.ToResponse());
         }
 
         public async Task<BaseResult<IReadOnlyList<CategoryResponseDto>>> GetAllAsync()
         {
-            var items = await _uow.Category.GetListAsync(
+            var items = await _categories.GetListAsync(
                 orderBy: q => q.OrderBy(c => c.Name)
             );
 
@@ -58,7 +61,7 @@ namespace BookStore.Application.Services.Catalog.Category
 
         public async Task<BaseResult<IReadOnlyList<CategoryTreeResponseDto>>> GetTreeAsync()
         {
-            var roots = await _uow.Category.GetRootAsync();
+            var roots = await _categories.GetRootAsync();
 
             List<CategoryTreeResponseDto> BuildTree(IEnumerable<Domain.Entities.Catalog.Category> nodes)
             {
@@ -67,7 +70,7 @@ namespace BookStore.Application.Services.Catalog.Category
                     Id = c.Id,
                     Name = c.Name,
                     Children = BuildTree(
-                        _uow.Category.GetChildrenAsync(c.Id).Result
+                        _categories.GetChildrenAsync(c.Id).Result
                     )
                 }).ToList();
             }
@@ -79,54 +82,54 @@ namespace BookStore.Application.Services.Catalog.Category
 
         public async Task<BaseResult<CategoryResponseDto>> GetByIdAsync(Guid id)
         {
-            var category = await _uow.Category.GetByIdAsync(id);
+            var category = await _categories.GetByIdAsync(id);
             if (category is null)
                 return BaseResult<CategoryResponseDto>.NotFound(
-                    $"Không tìm thấy danh mục với Id '{id}'."
+                    $"Category with Id '{id}' not found."
                     );
             return BaseResult<CategoryResponseDto>.Ok(category.ToResponse());
         }
 
         public async Task<BaseResult<CategoryResponseDto>> UpdateAsync(Guid id, UpdateCategoryRequestDto request)
         {
-            var category = await _uow.Category.GetByIdAsync(id);
+            var category = await _categories.GetByIdAsync(id);
             if (category is null)
                 return BaseResult<CategoryResponseDto>.NotFound(
-                    $"Không tìm thấy danh mục với Id '{id}'."
+                    $"Category with Id '{id}' not found."
                     );
 
             category.Name = request.Name.NormalizeSpace();
             category.Description = request.Description;
 
-            _uow.Category.Update(category);
-            await _uow.SaveChangesAsync();
+            _categories.Update(category);
+            await _session.SaveChangesAsync();
             return BaseResult<CategoryResponseDto>.Ok(category.ToResponse());
         }
 
         public async Task<BaseResult<bool>> DeleteAsync(Guid id)
         {
-            var category = await _uow.Category.GetByIdAsync(id);
+            var category = await _categories.GetByIdAsync(id);
             if (category is null)
                 return BaseResult<bool>.NotFound(
-                    $"Không tìm thấy danh mục với Id '{id}'."
+                    $"Category with Id '{id}' not found."
                     );
 
             if (category.SubCategories.Any())
                 return BaseResult<bool>.Fail(
                     "Category.HasSubCategories",
-                    "Không thể xóa danh mục vì nó có danh mục con.",
+                    "Cannot delete a category that has subcategories.",
                     ErrorType.Conflict
                     );
 
             if (category.BookCategories.Any())
                 return BaseResult<bool>.Fail(
                     "Category.HasBooks",
-                    "Không thể xóa danh mục vì nó đã được gán với sách.",
+                    "Cannot delete a category that is assigned to books.",
                     ErrorType.Conflict
                     );
 
-            _uow.Category.Delete(category);
-            await _uow.SaveChangesAsync();
+            _categories.Delete(category);
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
     }

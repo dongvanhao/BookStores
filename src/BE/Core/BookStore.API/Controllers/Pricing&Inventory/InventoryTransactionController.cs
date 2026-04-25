@@ -1,6 +1,5 @@
 ﻿using BookStore.Application.Dtos.Pricing_Inventory.InventoryTransaction;
-using BookStore.Domain.IRepository.Common;
-using Microsoft.AspNetCore.Http;
+using BookStore.Domain.IRepository.Pricing___Inventory;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookStore.API.Controllers.Pricing_Inventory
@@ -9,17 +8,17 @@ namespace BookStore.API.Controllers.Pricing_Inventory
     [ApiController]
     public class InventoryTransactionController : BaseController
     {
-        private readonly IUnitOfWork _uow;
+        private readonly IInventoryTransactionRepository _inventoryTransactions;
 
-        public InventoryTransactionController(IUnitOfWork uow)
+        public InventoryTransactionController(IInventoryTransactionRepository inventoryTransactions)
         {
-            _uow = uow;
+            _inventoryTransactions = inventoryTransactions;
         }
 
         [HttpGet("book/{bookId}")]
         public async Task<IActionResult> GetByBook(Guid bookId)
         {
-            var list = await _uow.InventoryTransaction.GetByBookAsync(bookId);
+            var list = await _inventoryTransactions.GetByBookAsync(bookId);
 
             return Ok(list.Select(x => new InventoryTransactionDto
             {

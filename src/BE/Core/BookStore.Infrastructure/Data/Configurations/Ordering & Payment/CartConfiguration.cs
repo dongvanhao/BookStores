@@ -12,9 +12,6 @@ namespace BookStore.Infrastructure.Data.Configurations.Ordering
 
             builder.HasKey(c => c.Id);
 
-            builder.Property(c => c.IsActive)
-                .HasDefaultValue(true);
-
             builder.Property(c => c.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 

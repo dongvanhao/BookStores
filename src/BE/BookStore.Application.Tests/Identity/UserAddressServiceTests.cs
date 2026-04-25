@@ -1,5 +1,5 @@
 ﻿using BookStore.Application.Dtos.IdentityDto.UserDto;
-using BookStore.Application.Services.IDentity;
+using BookStore.Application.Services.Identity;
 using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
@@ -16,19 +16,16 @@ namespace BookStore.Application.Tests.Identity
 {
     public class UserAddressServiceTests
     {
-        private readonly Mock<IUnitOfWork> _uow = new();
         private readonly Mock<IUserAddressRepository> _addresses = new();
+        private readonly Mock<IDbSession> _session = new();
 
         private readonly UserAddressService _service;
 
         public UserAddressServiceTests()
         {
-            _uow.Setup(x => x.UserAddresses).Returns(_addresses.Object);
+            _session.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            _uow.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
-
-            _service = new UserAddressService(_uow.Object);
+            _service = new UserAddressService(_addresses.Object, _session.Object);
         }
         [Fact]
         public async Task GetMyAsync_ShouldReturnList()
@@ -57,9 +54,9 @@ namespace BookStore.Application.Tests.Identity
 
             var dto = new CreateUserAddressDto
             {
-                ReipientName = "Nova",
+                RecipientName = "Nova",
                 PhoneNumber = "0123456789",
-                Povince = "HN",
+                Province = "HN",
                 District = "Ba Dinh",
                 Ward = "Kim Ma",
                 StreetAddress = "123 Street"
@@ -118,7 +115,7 @@ namespace BookStore.Application.Tests.Identity
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                ReipientName = "Old"
+                RecipientName = "Old"
             };
 
             _addresses
@@ -127,13 +124,13 @@ namespace BookStore.Application.Tests.Identity
 
             var dto = new UpdateUserAddressDto
             {
-                ReipientName = "New Name"
+                RecipientName = "New Name"
             };
 
             var result = await _service.UpdateAsync(userId, address.Id, dto);
 
             result.IsSuccess.Should().BeTrue();
-            address.ReipientName.Should().Be("New Name");
+            address.RecipientName.Should().Be("New Name");
         }
         [Fact]
         public async Task DeleteAsync_NotFound_ShouldFail()

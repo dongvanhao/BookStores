@@ -1,9 +1,8 @@
-﻿using BookStore.Application.Dtos.CatalogDto.Book;
+using BookStore.Application.Dtos.CatalogDto.Book;
 using BookStore.Application.IService.Catalog.Book;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Mappers.Catalog.Book;
 using BookStore.Domain.Entities.Catalog;
-using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
 using BookStore.Shared.Utilities;
 using Microsoft.AspNetCore.Http;
@@ -12,32 +11,42 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookStore.Domain.IRepository.Common;
+using BookStore.Domain.IRepository.Catalog;
 
 namespace BookStore.Application.Services.Catalog
 {
 
     public class BookService : IBookService
     {
-        private readonly IUnitOfWork _uow;
+        private readonly IBookRepository _books;
+        private readonly IPublisherRepository _publishers;
+        private readonly IBookAuthorRepository _bookAuthors;
+        private readonly IBookCategoryRepository _bookCategories;
+        private readonly IDbSession _session;
         private readonly IStorageService _storage;
-        public BookService(IUnitOfWork uow, IStorageService storage)
+        public BookService(IBookRepository books, IPublisherRepository publishers, IBookAuthorRepository bookAuthors, IBookCategoryRepository bookCategories, IDbSession session, IStorageService storage)
         {
-            _uow = uow;
+            _books = books;
+            _publishers = publishers;
+            _bookAuthors = bookAuthors;
+            _bookCategories = bookCategories;
+            _session = session;
             _storage = storage;
         }
 
         public async Task<BaseResult<BookDetailResponseDto>> CreateAsync(CreateBookRequestDto request)
         {
-            if (await _uow.Books.ExistsByISBNAsync(request.ISBN))
+            if (await _books.ExistsByISBNAsync(request.ISBN))
                 return BaseResult<BookDetailResponseDto>.Fail(
                     "Book.DuplicatedISBN",
-                    "ISBN đã tồn tại",
+                    "ISBN already exists.",
                     ErrorType.Conflict
                 );
 
-            var publisher = await _uow.Publishers.GetByIdAsync(request.PublisherId);
+            var publisher = await _publishers.GetByIdAsync(request.PublisherId);
             if (publisher == null)
-                return BaseResult<BookDetailResponseDto>.NotFound("Publisher không tồn tại");
+                return BaseResult<BookDetailResponseDto>.NotFound("Publisher not found.");
 
             var book = new Domain.Entities.Catalog.Book
             {
@@ -52,34 +61,33 @@ namespace BookStore.Application.Services.Catalog
                 PublisherId = request.PublisherId
             };
 
-            await _uow.Books.AddAsync(book);
+            await _books.AddAsync(book);
 
-            // Authors
             foreach (var authorId in request.AuthorIds.Distinct())
-                await _uow.BookAuthor.AddAsync(new BookAuthor
+                await _bookAuthors.AddAsync(new BookAuthor
                 {
                     BookId = book.Id,
                     AuthorId = authorId
                 });
 
-            // Categories
             foreach (var categoryId in request.CategoryIds.Distinct())
-                await _uow.BookCategory.AddAsync(new BookCategory
+                await _bookCategories.AddAsync(new BookCategory
                 {
                     BookId = book.Id,
                     CategoryId = categoryId
                 });
 
-            await _uow.SaveChangesAsync();
+            await _session.SaveChangesAsync();
 
             return await GetByIdAsync(book.Id);
         }
+
         public async Task<BaseResult<BookDetailResponseDto>> GetByIdAsync(Guid id)
         {
-            var book = await _uow.Books.GetDetailAsync(id);
+            var book = await _books.GetDetailAsync(id);
 
             if (book == null)
-                return BaseResult<BookDetailResponseDto>.NotFound("Không tìm thấy sách");
+                return BaseResult<BookDetailResponseDto>.NotFound("Book not found.");
 
             return BaseResult<BookDetailResponseDto>.Ok(book.ToDetailResponse());
         }
@@ -87,18 +95,19 @@ namespace BookStore.Application.Services.Catalog
         public async Task<BaseResult<PagedResult<BookDetailResponseDto>>> GetListAsync(int page, int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-            {
                 return BaseResult<PagedResult<BookDetailResponseDto>>.Fail(
                     "Book.InvalidPagination",
-                    "Page và PageSize phải lớn hơn 0",
+                    "Page and PageSize must be greater than 0.",
                     ErrorType.Validation
                 );
-            }
+
+            if (pageSize > 50)
+                pageSize = 50;
 
             var skip = (page - 1) * pageSize;
 
-            var total = await _uow.Books.CountAsync();
-            var books = await _uow.Books.GetPagedAsync(skip, pageSize);
+            var total = await _books.CountAsync();
+            var books = await _books.GetPagedAsync(skip, pageSize);
 
             var items = books
                 .Select(b => b.ToDetailResponse())
@@ -113,12 +122,26 @@ namespace BookStore.Application.Services.Catalog
                 )
             );
         }
-            
+
+        public async Task<BaseResult<PagedResult<BookDetailResponseDto>>> SearchAsync(BookSearchQuery query)
+        {
+            var page = query.Page <= 0 ? 1 : query.Page;
+            var pageSize = Math.Clamp(query.PageSize, 1, 50);
+            var skip = (page - 1) * pageSize;
+
+            var (books, total) = await _books.SearchAsync(query.Keyword, query.AuthorId, query.CategoryId, skip, pageSize);
+
+            var items = books.Select(b => b.ToDetailResponse()).ToList();
+
+            return BaseResult<PagedResult<BookDetailResponseDto>>.Ok(
+                new PagedResult<BookDetailResponseDto>(items, total, page, pageSize));
+        }
+
         public async Task<BaseResult<BookDetailResponseDto>> UpdateAsync(Guid id, UpdateBookRequestDto request)
         {
-           var book = await _uow.Books.GetByIdAsync(id);
-              if (book == null)
-                return BaseResult<BookDetailResponseDto>.NotFound("Không tìm thấy sách");
+            var book = await _books.GetByIdAsync(id);
+            if (book == null)
+                return BaseResult<BookDetailResponseDto>.NotFound("Book not found.");
 
             book.Title = request.Title.NormalizeSpace();
             book.Description = request.Description;
@@ -126,23 +149,22 @@ namespace BookStore.Application.Services.Catalog
             book.Edition = request.Edition;
             book.PageCount = request.PageCount;
 
-            _uow.Books.Update(book);
-            await _uow.SaveChangesAsync();
+            _books.Update(book);
+            await _session.SaveChangesAsync();
 
-            var updatedBook = await _uow.Books.GetDetailAsync(book.Id);
+            var updatedBook = await _books.GetDetailAsync(book.Id);
             return BaseResult<BookDetailResponseDto>.Ok(updatedBook!.ToDetailResponse());
         }
 
         public async Task<BaseResult<bool>> DeleteAsync(Guid id)
         {
-            var book = await _uow.Books.GetByIdAsync(id);
+            var book = await _books.GetByIdAsync(id);
             if (book == null)
-                return BaseResult<bool>.NotFound("Không tìm thấy sách");
-            
-            _uow.Books.Delete(book);
-            await _uow.SaveChangesAsync();
+                return BaseResult<bool>.NotFound("Book not found.");
+
+            _books.Delete(book);
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
-
     }
 }

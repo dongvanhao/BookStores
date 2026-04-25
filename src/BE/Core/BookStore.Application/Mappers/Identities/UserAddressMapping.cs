@@ -15,9 +15,9 @@ namespace BookStore.Application.Mappers.Identities
             return new UserAddressDto
             {
                 Id = a.Id,
-                ReipientName = a.ReipientName,
+                RecipientName = a.RecipientName,
                 PhoneNumber = a.PhoneNumber,
-                Povince = a.Povince,
+                Province = a.Province,
                 District = a.District,
                 Ward = a.Ward,
                 StreetAddress = a.StreetAddress,

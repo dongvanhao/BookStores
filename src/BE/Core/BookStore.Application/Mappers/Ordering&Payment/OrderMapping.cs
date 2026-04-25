@@ -14,7 +14,7 @@ namespace BookStore.Application.Mappers.Ordering_Payment
         {
             Id = o.Id,
             OrderNumber = o.OrderNumber,
-            Status = o.Status,
+            Status = o.Status.ToString(),
             FinalAmount = o.FinalAmount,
             CreatedAt = o.CreatedAt
         };
@@ -23,8 +23,8 @@ namespace BookStore.Application.Mappers.Ordering_Payment
         {
             Id = o.Id,
             OrderNumber = o.OrderNumber,
-            Status = o.Status,
-            TotalAmount = o.TotalAmount,
+            Status = o.Status.ToString(),
+            TotalAmount = o.SubTotal,
             DiscountAmount = o.DiscountAmount,
             FinalAmount = o.FinalAmount,
             CreateAt = o.CreatedAt,

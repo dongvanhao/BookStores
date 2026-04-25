@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Pricing_Inventory;
+using BookStore.Domain.Entities.Pricing_Inventory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -27,20 +27,12 @@ namespace BookStore.Infrastructure.Configurations.Pricing_Inventory
             builder.Property(x => x.Note)
                    .HasMaxLength(1000);
 
-            // FK đến Warehouse
-            builder.HasOne(x => x.Warehouse)
-                   .WithMany()
-                   .HasForeignKey(x => x.WarehouseId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            // FK đến Book
             builder.HasOne(x => x.Book)
                    .WithMany()
                    .HasForeignKey(x => x.BookId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            // Index phục vụ báo cáo / thống kê
-            builder.HasIndex(x => new { x.WarehouseId, x.BookId, x.CreatedAt });
+            builder.HasIndex(x => new { x.BookId, x.CreatedAt });
         }
     }
 }

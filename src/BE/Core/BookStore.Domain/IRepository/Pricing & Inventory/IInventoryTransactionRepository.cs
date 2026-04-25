@@ -11,6 +11,6 @@ namespace BookStore.Domain.IRepository.Pricing___Inventory
     public interface IInventoryTransactionRepository : IGenericRepository<InventoryTransaction>
     {
         Task<IReadOnlyList<InventoryTransaction>> GetByBookAsync(Guid bookId);
-        Task<int> GetStockAsync(Guid bookId, Guid warehouseId);
+        Task<int> GetStockAsync(Guid bookId);
     }
 }
