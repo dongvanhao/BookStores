@@ -16,7 +16,7 @@ namespace BookStore.Application.Mappers.Catalog.Author
                 Id = author.Id,
                 Name = author.Name,
                 Biography = author.Biography,
-                AvartarUrl = author.AvartarUrl
+                AvatarUrl = author.AvatarUrl
             };
         }
     }

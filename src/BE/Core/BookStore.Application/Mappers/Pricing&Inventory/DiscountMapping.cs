@@ -15,11 +15,10 @@ namespace BookStore.Application.Mappers.Pricing_Inventory
             return new DiscountDto
             {
                 Id = d.Id,
-                Code = d.Code,
                 Title = d.Title,
                 Description = d.Description,
                 Percentage = d.Percentage,
-                MaxDiscountAmount = d.MaxDiscountAmount,
+                MaxAmount = d.MaxAmount,
                 EndDate = d.EndDate
             };
         }

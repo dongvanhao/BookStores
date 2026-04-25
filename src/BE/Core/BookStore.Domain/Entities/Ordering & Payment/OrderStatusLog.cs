@@ -1,11 +1,4 @@
-﻿using BookStore.Domain.Entities.Ordering;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BookStore.Domain.Entities.Ordering_Payment
+namespace BookStore.Domain.Entities.Ordering
 {
     public class OrderStatusLog
     {
@@ -14,10 +7,9 @@ namespace BookStore.Domain.Entities.Ordering_Payment
         public Guid OrderId { get; set; }
         public virtual Order Order { get; set; } = null!;
 
-        public string OldStatus { get; set; } = null!;         // Trạng thái cũ
-        public string NewStatus { get; set; } = null!;         // Trạng thái mới
+        public OrderStatus OldStatus { get; set; }
+        public OrderStatus NewStatus { get; set; }
+        public string? Note { get; set; }
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
-        public string? ChangedBy { get; set; }                 // Ai thay đổi (Admin/User/System)
-
     }
 }

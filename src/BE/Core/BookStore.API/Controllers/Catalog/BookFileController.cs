@@ -1,6 +1,5 @@
 ﻿using BookStore.Application.Dtos.CatalogDto.Book;
 using BookStore.Application.IService.Catalog.Book;
-using BookStore.Domain.IRepository.Catalog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

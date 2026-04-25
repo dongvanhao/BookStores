@@ -1,12 +1,14 @@
 ﻿using BookStore.Application.Dtos.IdentityDto;
 using BookStore.Application.IService.Identity;
-using BookStore.Application.Services.IDentity;
+using BookStore.Application.Options;
+using BookStore.Application.Services.Identity;
 using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
 using BookStore.Shared.Common;
 using BookStore.Shared.Errors;
 using FluentAssertions;
+using Microsoft.Extensions.Options;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -18,44 +20,40 @@ using System.Threading.Tasks;
 namespace BookStore.Application.Tests.Identity
 {
     public class AuthServiceTests
-    {// 1️ Mock UoW và các dependency
-        private readonly Mock<IUnitOfWork> _uow = new();
+    {
         private readonly Mock<IUserRepository> _users = new();
+        private readonly Mock<IRoleRepository> _roles = new();
         private readonly Mock<IUserRoleRepository> _userRoles = new();
         private readonly Mock<IRefreshTokenRepository> _refreshTokens = new();
         private readonly Mock<IGenericRepository<PasswordResetToken>> _passwordResetTokens = new();
+        private readonly Mock<IDbSession> _session = new();
 
         private readonly Mock<IJwtService> _jwt = new();
         private readonly Mock<IHashingService> _hashing = new();
         private readonly Mock<IEmailSender> _email = new();
 
-        // 2️ Service cần test
         private readonly AuthService _service;
 
         public AuthServiceTests()
         {
-            //  GÁN repository con vào UoW
-            _uow.Setup(x => x.Users).Returns(_users.Object);
-            _uow.Setup(x => x.UserRoles).Returns(_userRoles.Object);
-            _uow.Setup(x => x.RefreshTokens).Returns(_refreshTokens.Object);
-            _uow.Setup(x => x.PasswordResetTokens).Returns(_passwordResetTokens.Object);
-            _uow
-            .Setup(x => x.ExecuteTransactionAsync(It.IsAny<Func<Task>>()))
-            .Returns<Func<Task>>(async action =>
-            {
-            // CHẠY NGHIỆP VỤ BÊN TRONG TRANSACTION
-            await action();
-            });
+            _session.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _session
+                .Setup(x => x.ExecuteTransactionAsync(It.IsAny<Func<Task>>()))
+                .Returns<Func<Task>>(async action => await action());
 
-            // SaveChanges luôn OK
-            _uow.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
+            var appSettings = Microsoft.Extensions.Options.Options.Create(new AppSettings { ClientBaseUrl = "http://localhost:3000" });
 
             _service = new AuthService(
-                _uow.Object,
+                _users.Object,
+                _roles.Object,
+                _userRoles.Object,
+                _refreshTokens.Object,
+                _passwordResetTokens.Object,
+                _session.Object,
                 _jwt.Object,
                 _hashing.Object,
-                _email.Object
+                _email.Object,
+                appSettings
             );
         }
         [Fact]

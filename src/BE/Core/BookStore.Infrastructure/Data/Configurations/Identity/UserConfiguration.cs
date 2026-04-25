@@ -27,35 +27,28 @@ namespace BookStore.Infrastructure.Data.Configurations.Identity
             builder.Property(u => u.IsActive)
                 .HasDefaultValue(true);
 
-            builder.Property(u => u.CreateAt)
+            builder.Property(u => u.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 
             builder.Property(u => u.UpdatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
-            //Cấu hình cho EmailConfirmed
+
             builder.Property(u => u.EmailConfirmed)
                 .HasDefaultValue(false)
                 .IsRequired();
-            //Cấu hình cho IsLocked
+
             builder.Property(u => u.IsLocked)
                 .HasDefaultValue(false)
                 .IsRequired();
-            //  Quan hệ 1-1 với UserProfile
-            builder.HasOne(u => u.Profiles)
+
+            builder.HasOne(u => u.Profile)
                 .WithOne(p => p.User)
                 .HasForeignKey<UserProfile>(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            //  1-n với UserAddress
             builder.HasMany(u => u.Addresses)
                 .WithOne(a => a.User)
                 .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            //  1-n với UserDevice
-            builder.HasMany(u => u.Devices)
-                .WithOne(d => d.User)
-                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             //  1-n với RefreshToken

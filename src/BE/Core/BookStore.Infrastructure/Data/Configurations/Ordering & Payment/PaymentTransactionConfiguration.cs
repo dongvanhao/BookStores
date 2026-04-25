@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Ordering_Payment;
+using BookStore.Domain.Entities.Ordering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,33 +14,25 @@ namespace BookStore.Infrastructure.Data.Configurations.Ordering
 
             builder.Property(p => p.Provider)
                 .HasMaxLength(100)
-                .HasDefaultValue("VNPay");
-
-            builder.Property(p => p.TransactionCode)
-                .HasMaxLength(100)
                 .IsRequired();
 
-            builder.HasIndex(p => p.TransactionCode).IsUnique();
+            builder.Property(p => p.TransactionCode)
+                .HasMaxLength(100);
 
             builder.Property(p => p.PaymentMethod)
                 .HasMaxLength(50)
-                .HasDefaultValue("Online");
+                .IsRequired();
 
             builder.Property(p => p.Amount)
                 .HasColumnType("decimal(18,2)");
 
             builder.Property(p => p.Status)
+                .HasConversion<string>()
                 .HasMaxLength(50)
-                .HasDefaultValue("Pending");
+                .HasDefaultValue(PaymentStatus.Pending);
 
             builder.Property(p => p.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
-
-            // 🔗 1-n: PaymentTransaction – Refund
-            builder.HasMany(p => p.Refunds)
-                .WithOne(r => r.PaymentTransaction)
-                .HasForeignKey(r => r.PaymentTransactionId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

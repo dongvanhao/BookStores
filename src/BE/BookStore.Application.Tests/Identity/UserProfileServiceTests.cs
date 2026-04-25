@@ -1,6 +1,6 @@
 ﻿using BookStore.Application.Dtos.IdentityDto.UserDto;
 using BookStore.Application.IService.Storage;
-using BookStore.Application.Services.IDentity;
+using BookStore.Application.Services.Identity;
 using BookStore.Domain.Entities.Identity;
 using BookStore.Domain.IRepository.Common;
 using BookStore.Domain.IRepository.Identity;
@@ -20,23 +20,17 @@ namespace BookStore.Application.Tests.Identity
 {
     public class UserProfileServiceTests
     {
-        private readonly Mock<IUnitOfWork> _uow = new();
         private readonly Mock<IUserProfileRepository> _profiles = new();
+        private readonly Mock<IDbSession> _session = new();
         private readonly Mock<IStorageService> _storage = new();
 
         private readonly UserProfileService _service;
 
         public UserProfileServiceTests()
         {
-            _uow.Setup(x => x.UserProfiles).Returns(_profiles.Object);
+            _session.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            _uow.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(1);
-
-            _service = new UserProfileService(
-                _uow.Object,
-                _storage.Object
-            );
+            _service = new UserProfileService(_profiles.Object, _session.Object, _storage.Object);
         }
         [Fact]
         public async Task GetMyProfile_ProfileNotExist_ShouldReturnNotFound()

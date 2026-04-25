@@ -16,7 +16,7 @@ namespace BookStore.Application.IService.Identity
         Task<BaseResult<AuthResponseDto>> RefreshTokenAsync(string refreshToken, string originIp);
         Task<BaseResult<string>> LogoutAsync(string refreshTokenPlain);
         //Task<BaseResult<string>> ConfirmEmailAsync(Guid userId, string tokenPlain);
-        Task<BaseResult<string>> ForgotPasswordAsync(string email, string clientUrl);
+        Task<BaseResult<string>> ForgotPasswordAsync(string email);
         Task<BaseResult<string>> ResetPasswordAsync(ResetPasswordDto dto);
         Task<BaseResult<string>> CreateUserByAdminAsync(AuthDto.CreateUserByAdminDto dto);
     }

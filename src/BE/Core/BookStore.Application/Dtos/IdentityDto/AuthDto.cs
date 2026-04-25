@@ -1,20 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookStore.Application.Dtos.IdentityDto
 {
     public class AuthDto
     {
-        public record RegisterDto(string Email, string Password, string? FullName);
-        public record LoginDto(string Email, string Password);
-        public record AuthResponseDto(string AccessToken, string RefreshToken,string email, DateTime ExpiresAt);
-        public record RefreshRequestDto(string RefreshToken);
-        public record LogoutRequestDto(string RefreshToken);
-        public record ForgotPasswordDto(string Email);
-        public record ResetPasswordDto(Guid UserId, string Token, string NewPassword);
-        public record CreateUserByAdminDto(string Email, string Password, string RoleName);
+        public record RegisterDto(
+            [Required][EmailAddress][MaxLength(256)] string Email,
+            [Required][MinLength(8)][MaxLength(128)] string Password,
+            [MaxLength(100)] string? FullName
+        );
+
+        public record LoginDto(
+            [Required][EmailAddress] string Email,
+            [Required] string Password
+        );
+
+        public record AuthResponseDto(
+            string AccessToken,
+            string RefreshToken,
+            string Email,
+            DateTime ExpiresAt
+        );
+
+        public record RefreshRequestDto(
+            [Required] string RefreshToken
+        );
+
+        public record LogoutRequestDto(
+            [Required] string RefreshToken
+        );
+
+        public record ForgotPasswordDto(
+            [Required][EmailAddress] string Email
+        );
+
+        public record ResetPasswordDto(
+            [Required] Guid UserId,
+            [Required] string Token,
+            [Required][MinLength(8)][MaxLength(128)] string NewPassword
+        );
+
+        public record CreateUserByAdminDto(
+            [Required][EmailAddress][MaxLength(256)] string Email,
+            [Required][MinLength(8)][MaxLength(128)] string Password,
+            [Required][MaxLength(50)] string RoleName
+        );
     }
 }

@@ -1,103 +1,89 @@
-﻿using BookStore.Application.Dtos.Pricing_Inventory.StockItem;
+using BookStore.Application.Dtos.Pricing_Inventory.StockItem;
 using BookStore.Application.IService.Pricing_Inventory;
 using BookStore.Application.Mappers.Pricing_Inventory;
 using BookStore.Domain.Entities.Pricing_Inventory;
-using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BookStore.Domain.IRepository.Common;
+using BookStore.Domain.IRepository.Pricing___Inventory;
 
 namespace BookStore.Application.Services.Pricing_Inventory
 {
     public class StockItemService : IStockItemService
     {
-        private readonly IUnitOfWork _uow;
+        private readonly IInventoryTransactionRepository _inventoryTransactions;
+        private readonly IStockItemRepository _stockItems;
+        private readonly IDbSession _session;
 
-        public StockItemService(IUnitOfWork uow)
+        public StockItemService(
+            IInventoryTransactionRepository inventoryTransactions,
+            IStockItemRepository stockItems,
+            IDbSession session)
         {
-            _uow = uow;
+            _inventoryTransactions = inventoryTransactions;
+            _stockItems = stockItems;
+            _session = session;
         }
 
-        public async Task<BaseResult<StockItemResponseDto>> GetAsync(
-            Guid bookId, Guid warehouseId)
+        public async Task<BaseResult<StockItemResponseDto>> GetAsync(Guid bookId)
         {
-            var stock = await _uow.StockItem.GetAsync(bookId, warehouseId);
+            var stock = await _stockItems.GetByBookAsync(bookId);
             if (stock == null)
-                return BaseResult<StockItemResponseDto>.NotFound("Chưa có tồn kho");
+                return BaseResult<StockItemResponseDto>.NotFound("No stock found.");
 
             return BaseResult<StockItemResponseDto>.Ok(stock.ToDto());
         }
 
-        public async Task<BaseResult<bool>> IncreaseAsync(
-            AdjustStockRequestDto dto)
+        public async Task<BaseResult<bool>> IncreaseAsync(AdjustStockRequestDto dto)
         {
-            var stock = await GetOrCreateAsync(dto.BookId, dto.WarehouseId);
+            var stock = await GetOrCreateAsync(dto.BookId);
+            stock.Restock(dto.Quantity);
+            _stockItems.Update(stock);
 
-            // Domain logic
-            stock.Increase(dto.Quantity);
-            _uow.StockItem.Update(stock);
-
-            // Audit
-            await _uow.InventoryTransaction.AddAsync(new InventoryTransaction
+            await _inventoryTransactions.AddAsync(new InventoryTransaction
             {
                 Id = Guid.NewGuid(),
                 BookId = dto.BookId,
-                WarehouseId = dto.WarehouseId,
                 Type = InventoryTransactionType.Inbound,
                 QuantityChange = dto.Quantity,
                 Note = dto.Note
             });
 
-            await _uow.SaveChangesAsync();
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
 
-        public async Task<BaseResult<bool>> DecreaseAsync(
-            AdjustStockRequestDto dto)
+        public async Task<BaseResult<bool>> DecreaseAsync(AdjustStockRequestDto dto)
         {
-            var stock = await _uow.StockItem.GetAsync(dto.BookId, dto.WarehouseId);
+            var stock = await _stockItems.GetByBookAsync(dto.BookId);
             if (stock == null)
-                return BaseResult<bool>.NotFound("Không có tồn kho");
+                return BaseResult<bool>.NotFound("No stock found.");
 
-            // Domain logic
-            stock.Decrease(dto.Quantity);
-            _uow.StockItem.Update(stock);
+            if (stock.AvailableQuantity < dto.Quantity)
+                return BaseResult<bool>.Fail("Stock.Insufficient", "Insufficient stock.", ErrorType.Conflict);
 
-            // Audit
-            await _uow.InventoryTransaction.AddAsync(new InventoryTransaction
+            stock.Reserve(dto.Quantity);
+            _stockItems.Update(stock);
+
+            await _inventoryTransactions.AddAsync(new InventoryTransaction
             {
                 Id = Guid.NewGuid(),
                 BookId = dto.BookId,
-                WarehouseId = dto.WarehouseId,
                 Type = InventoryTransactionType.Adjustment,
                 QuantityChange = -dto.Quantity,
                 Note = dto.Note
             });
 
-            await _uow.SaveChangesAsync();
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
 
-        // -----------------------
-        // PRIVATE HELPERS
-        // -----------------------
-        private async Task<StockItem> GetOrCreateAsync(
-            Guid bookId, Guid warehouseId)
+        private async Task<StockItem> GetOrCreateAsync(Guid bookId)
         {
-            var stock = await _uow.StockItem.GetAsync(bookId, warehouseId);
+            var stock = await _stockItems.GetByBookAsync(bookId);
             if (stock != null) return stock;
 
-            stock = new StockItem
-            {
-                Id = Guid.NewGuid(),
-                BookId = bookId,
-                WarehouseId = warehouseId
-            };
-
-            await _uow.StockItem.AddAsync(stock);
+            stock = new StockItem { Id = Guid.NewGuid(), BookId = bookId };
+            await _stockItems.AddAsync(stock);
             return stock;
         }
     }

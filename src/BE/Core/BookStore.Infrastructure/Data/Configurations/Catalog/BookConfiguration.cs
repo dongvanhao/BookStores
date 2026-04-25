@@ -59,22 +59,11 @@ namespace BookStore.Infrastructure.Data.Configurations.Catalog
                 .HasForeignKey(i => i.BookId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            //  1-n với BookFile
-            builder.HasMany(b => b.Files)
+            //  1-1 với BookFile (preview)
+            builder.HasOne(b => b.PreviewFile)
                 .WithOne(f => f.Book)
-                .HasForeignKey(f => f.BookId)
+                .HasForeignKey<BookFile>(f => f.BookId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            //  1-n với BookMetadata
-            builder.HasMany(b => b.Metadata)
-                .WithOne(m => m.Book)
-                .HasForeignKey(m => m.BookId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            builder.Property(b => b.CoverImageUrl)
-                .HasMaxLength(1000)
-                .IsUnicode(false)
-                .IsRequired(false);
 
         }
     }

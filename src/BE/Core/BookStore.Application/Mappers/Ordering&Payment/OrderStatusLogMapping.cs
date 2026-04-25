@@ -1,5 +1,5 @@
 ﻿using BookStore.Application.Dtos.Ordering_Payment.Order;
-using BookStore.Domain.Entities.Ordering_Payment;
+using BookStore.Domain.Entities.Ordering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +14,9 @@ namespace BookStore.Application.Mappers.Ordering_Payment
         {
             return new OrderStatusLogDto
             {
-                OldStatus = log.OldStatus,
-                NewStatus = log.NewStatus,
-                ChangedAt = log.ChangedAt,
-                ChangedBy = log.ChangedBy
+                OldStatus = log.OldStatus.ToString(),
+                NewStatus = log.NewStatus.ToString(),
+                ChangedAt = log.ChangedAt
             };
         }
     }

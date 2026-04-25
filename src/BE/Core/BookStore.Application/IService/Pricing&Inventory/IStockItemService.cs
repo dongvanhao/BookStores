@@ -10,7 +10,7 @@ namespace BookStore.Application.IService.Pricing_Inventory
 {
     public interface IStockItemService
     {
-        Task<BaseResult<StockItemResponseDto>> GetAsync(Guid bookId, Guid warehouseId);
+        Task<BaseResult<StockItemResponseDto>> GetAsync(Guid bookId);
         Task<BaseResult<bool>> IncreaseAsync(AdjustStockRequestDto dto);
         Task<BaseResult<bool>> DecreaseAsync(AdjustStockRequestDto dto);
     }

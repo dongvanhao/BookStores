@@ -1,7 +1,6 @@
-﻿using BookStore.Application.Dtos.Pricing_Inventory.StockItem;
+using BookStore.Application.Dtos.Pricing_Inventory.StockItem;
 using BookStore.Application.IService.Pricing_Inventory;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookStore.API.Controllers.Pricing_Inventory
@@ -19,13 +18,12 @@ namespace BookStore.API.Controllers.Pricing_Inventory
 
         [HttpGet]
         [Authorize(Roles = "Admin,InventoryManager")]
-        public async Task<IActionResult> Get(
-            Guid bookId, Guid warehouseId)
-            => FromResult(await _service.GetAsync(bookId, warehouseId));
+        public async Task<IActionResult> Get(Guid bookId)
+            => FromResult(await _service.GetAsync(bookId));
 
-        [HttpPost("increase")]
+        [HttpPost("restock")]
         [Authorize(Roles = "Admin,InventoryManager")]
-        public async Task<IActionResult> Increase(AdjustStockRequestDto dto)
+        public async Task<IActionResult> Restock(AdjustStockRequestDto dto)
             => FromResult(await _service.IncreaseAsync(dto));
 
         [HttpPost("decrease")]

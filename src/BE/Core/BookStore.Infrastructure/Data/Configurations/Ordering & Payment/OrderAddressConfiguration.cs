@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Ordering_Payment;
+﻿using BookStore.Domain.Entities.Ordering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,7 +15,7 @@ namespace BookStore.Infrastructure.Data.Configurations.Ordering
                    .IsRequired();
             // 🔗 1–1: Order <-> OrderAddress
             builder.HasOne(a => a.Order)
-                   .WithOne(o => o.OrderAddress)
+                   .WithOne(o => o.ShippingAddress)
                    .HasForeignKey<OrderAddress>(a => a.OrderId)
                    .OnDelete(DeleteBehavior.Cascade);
 

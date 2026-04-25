@@ -11,12 +11,12 @@ namespace BookStore.Application.Dtos.CatalogDto.Book
         public Guid Id { get; set; }
         public string Title { get; set; } = null!;
         public string ISBN { get; set; } = null!;
-        public string Description { get; set; } = null!;
+        public string? Description { get; set; }
         public int PublicationYear { get; set; }
-        public string Language { get; set; } = null!;
+        public string? Language { get; set; }
         public bool IsAvailable { get; set; }
         public string? Edition { get; set; }
-        public int PageCount { get; set; }
+        public int? PageCount { get; set; }
         public string? CoverImageUrl { get; set; }
 
         public string Publisher { get; set; } = null!;

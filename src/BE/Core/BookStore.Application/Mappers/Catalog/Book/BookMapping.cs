@@ -22,7 +22,7 @@ namespace BookStore.Application.Mappers.Catalog.Book
                 IsAvailable = book.IsAvailable,
                 Edition = book.Edition,
                 PageCount = book.PageCount,
-                CoverImageUrl = book.CoverImageUrl,
+                CoverImageUrl = book.Images.FirstOrDefault()?.Url,
 
                 Publisher = book.Publisher.Name,
 

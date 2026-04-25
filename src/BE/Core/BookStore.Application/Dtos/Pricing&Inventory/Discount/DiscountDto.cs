@@ -9,11 +9,10 @@ namespace BookStore.Application.Dtos.Pricing_Inventory.Discount
     public class DiscountDto
     {
         public Guid Id { get; set; }
-        public string Code { get; set; } = null!;
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public decimal Percentage { get; set; }
-        public decimal? MaxDiscountAmount { get; set; }
+        public decimal? MaxAmount { get; set; }
         public DateTime EndDate { get; set; }
     }
 

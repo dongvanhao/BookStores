@@ -14,26 +14,20 @@ using System.Threading;
 
 public class BookServiceTests
 {
-    private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IBookRepository> _books = new();
     private readonly Mock<IPublisherRepository> _publishers = new();
     private readonly Mock<IBookAuthorRepository> _bookAuthors = new();
     private readonly Mock<IBookCategoryRepository> _bookCategories = new();
+    private readonly Mock<IDbSession> _session = new();
     private readonly Mock<IStorageService> _storage = new();
 
     private readonly BookService _service;
 
     public BookServiceTests()
     {
-        _uow.Setup(x => x.Books).Returns(_books.Object);
-        _uow.Setup(x => x.Publishers).Returns(_publishers.Object);
-        _uow.Setup(x => x.BookAuthor).Returns(_bookAuthors.Object);
-        _uow.Setup(x => x.BookCategory).Returns(_bookCategories.Object);
+        _session.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        _uow.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
-
-        _service = new BookService(_uow.Object, _storage.Object);
+        _service = new BookService(_books.Object, _publishers.Object, _bookAuthors.Object, _bookCategories.Object, _session.Object, _storage.Object);
     }
 
     // ================= HELPER =================
@@ -67,7 +61,7 @@ public class BookServiceTests
     [Fact]
     public async Task CreateAsync_DuplicatedISBN_ShouldFail()
     {
-        var dto = new CreateBookRequestDto { ISBN = "123" };
+        var dto = new CreateBookRequestDto("", "123", null, 2020, null, null, null, Guid.Empty, new(), new());
 
         _books.Setup(x => x.ExistsByISBNAsync(dto.ISBN))
               .ReturnsAsync(true);
@@ -83,13 +77,7 @@ public class BookServiceTests
     {
         var publisherId = Guid.NewGuid();
 
-        var dto = new CreateBookRequestDto
-        {
-            ISBN = "123",
-            PublisherId = publisherId,
-            AuthorIds = new List<Guid>(),
-            CategoryIds = new List<Guid>()
-        };
+        var dto = new CreateBookRequestDto("", "123", null, 2020, null, null, null, publisherId, new List<Guid>(), new List<Guid>());
 
         _books.Setup(x => x.ExistsByISBNAsync(dto.ISBN))
               .ReturnsAsync(false);
@@ -108,14 +96,7 @@ public class BookServiceTests
     {
         var publisherId = Guid.NewGuid();
 
-        var dto = new CreateBookRequestDto
-        {
-            Title = "  Clean Code ",
-            ISBN = "123",
-            PublisherId = publisherId,
-            AuthorIds = new List<Guid> { Guid.NewGuid() },
-            CategoryIds = new List<Guid> { Guid.NewGuid() }
-        };
+        var dto = new CreateBookRequestDto("  Clean Code ", "123", null, 2020, null, null, null, publisherId, new List<Guid> { Guid.NewGuid() }, new List<Guid> { Guid.NewGuid() });
 
         _books.Setup(x => x.ExistsByISBNAsync(dto.ISBN))
               .ReturnsAsync(false);

@@ -1,13 +1,8 @@
-﻿using BookStore.Domain.Entities.Ordering;
+using BookStore.Domain.Entities.Ordering;
 using BookStore.Domain.IRepository.Ordering_Payment;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Repository.Common;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BookStore.Infrastructure.Repository.Ordering_Payment
 {
@@ -31,10 +26,9 @@ namespace BookStore.Infrastructure.Repository.Ordering_Payment
         {
             return await _context.Set<Order>()
                 .Include(o => o.Items)
-                .Include(o => o.OrderAddress)
-                .Include(o => o.PaymentTransaction)
+                .Include(o => o.ShippingAddress)
+                .Include(o => o.Payment)
                 .Include(o => o.StatusLogs)
-                .Include(o => o.Histories)
                 .FirstOrDefaultAsync(o =>
                     o.Id == orderId && o.UserId == userId);
         }

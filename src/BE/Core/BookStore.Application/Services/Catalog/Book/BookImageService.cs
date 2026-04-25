@@ -1,8 +1,7 @@
-﻿using BookStore.Application.Dtos.CatalogDto.Book;
+using BookStore.Application.Dtos.CatalogDto.Book;
 using BookStore.Application.IService.Catalog.Book;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Mappers.Catalog.Book;
-using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -10,32 +9,38 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookStore.Domain.IRepository.Common;
+using BookStore.Domain.IRepository.Catalog;
 
 namespace BookStore.Application.Services.Catalog.Book
 {
     public class BookImageService : IBookImageService
     {
-        private readonly IUnitOfWork _uow;
+        private readonly IBookRepository _books;
+        private readonly IBookImageRepository _bookImages;
+        private readonly IDbSession _session;
         private readonly IStorageService _storage;
-        public BookImageService(IUnitOfWork uow, IStorageService storage)
+        public BookImageService(IBookRepository books, IBookImageRepository bookImages, IDbSession session, IStorageService storage)
         {
-            _uow = uow;
+            _books = books;
+            _bookImages = bookImages;
+            _session = session;
             _storage = storage;
         }
         public async Task<BaseResult<BookImageResponseDto>> UploadAsync(Guid bookId, IFormFile file, UploadBookImageRequestDto request)
         {
-            var book = await _uow.Books.GetByIdAsync(bookId);
+            var book = await _books.GetByIdAsync(bookId);
             if (book == null)
             {
                 return BaseResult<BookImageResponseDto>.NotFound(
-                    $"Không tìm thấy sách với Id '{bookId}'.");
+                    $"Book with Id '{bookId}' not found.");
             }
 
             if(file == null || file.Length == 0)
             {
                 return BaseResult<BookImageResponseDto>.Fail(
                     code: "BookImage.InvalidFile",
-                    message: "Tệp hình ảnh không hợp lệ.",
+                    message: "Invalid image file.",
                     type: ErrorType.Validation);
             }
 
@@ -49,7 +54,7 @@ namespace BookStore.Application.Services.Catalog.Book
             if (!upload.IsSuccess)
                 return BaseResult<BookImageResponseDto>.Fail(upload.Error!);
 
-            var order = (await _uow.BookImage.GetByBookIdAsync(bookId)).Count + 1;
+            var order = (await _bookImages.GetByBookIdAsync(bookId)).Count + 1;
 
             var image = new Domain.Entities.Catalog.BookImage
             {
@@ -66,24 +71,24 @@ namespace BookStore.Application.Services.Catalog.Book
             //Nếu set cover → hạ các ảnh khác
             if (request.IsCover)
             {
-                var currentCover = await _uow.BookImage.GetCoverAsync(bookId);
+                var currentCover = await _bookImages.GetCoverAsync(bookId);
                 if(currentCover != null)
                     currentCover.IsCover = false;
             }
-            await _uow.BookImage.AddAsync(image);
-            await _uow.SaveChangesAsync();
+            await _bookImages.AddAsync(image);
+            await _session.SaveChangesAsync();
             return BaseResult<BookImageResponseDto>.Ok(image.ToResponse());
         }
 
         public async Task<BaseResult<IReadOnlyList<BookImageResponseDto>>> GetByBookIdAsync(Guid bookId)
         {
-            var book = await _uow.Books.GetByIdAsync(bookId);
+            var book = await _books.GetByIdAsync(bookId);
             if (book == null)
             {
                 return BaseResult<IReadOnlyList<BookImageResponseDto>>.NotFound(
-                    $"Không tìm thấy sách với Id '{bookId}'.");
+                    $"Book with Id '{bookId}' not found.");
             }
-            var images = await _uow.BookImage.GetByBookIdAsync(bookId);
+            var images = await _bookImages.GetByBookIdAsync(bookId);
             
             return BaseResult<IReadOnlyList<BookImageResponseDto>>.Ok(
                 images.Select(i => i.ToResponse()).ToList());
@@ -91,46 +96,46 @@ namespace BookStore.Application.Services.Catalog.Book
 
         public async Task<BaseResult<bool>> SetCoverAsync(Guid bookId, Guid imageId)
         {
-            var image = await _uow.BookImage.GetByIdAsync(imageId);
+            var image = await _bookImages.GetByIdAsync(imageId);
             if (image == null || image.BookId != bookId)
             {
                 return BaseResult<bool>.NotFound(
-                    $"Không tìm thấy hình ảnh với Id '{imageId}' cho sách với Id '{bookId}'.");
+                    $"Image with Id '{imageId}' not found for book with Id '{bookId}'.");
             }
-            var currentCover = await _uow.BookImage.GetCoverAsync(bookId);
+            var currentCover = await _bookImages.GetCoverAsync(bookId);
             if (currentCover != null && currentCover.Id != imageId)
             {
                 currentCover.IsCover = false;
             }
             image.IsCover = true;
 
-            _uow.BookImage.Update(image);
-            await _uow.SaveChangesAsync();
+            _bookImages.Update(image);
+            await _session.SaveChangesAsync();
 
             return BaseResult<bool>.Ok(true);
         }
 
         public async Task<BaseResult<bool>> DeleteAsync(Guid bookId, Guid imageId)
         {
-            var image = await _uow.BookImage.GetByIdAsync(imageId);
+            var image = await _bookImages.GetByIdAsync(imageId);
             if (image == null || image.BookId != bookId)
             {
                 return BaseResult<bool>.NotFound(
-                    $"Không tìm thấy hình ảnh với Id '{imageId}' cho sách với Id '{bookId}'.");
+                    $"Image with Id '{imageId}' not found for book with Id '{bookId}'.");
             }
-            _uow.BookImage.Delete(image);
-            await _uow.SaveChangesAsync();
+            _bookImages.Delete(image);
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
 
         public async Task<BaseResult<bool>> ReorderAsync(Guid bookId, List<Guid> imageIds)
         {
-            var images = await _uow.BookImage.GetByBookIdAsync(bookId);
+            var images = await _bookImages.GetByBookIdAsync(bookId);
             if (images.Count != imageIds.Count || images.Any(i => !imageIds.Contains(i.Id)))
             {
                 return BaseResult<bool>.Fail(
                     code: "BookImage.InvalidReorder",
-                    message: "Danh sách hình ảnh không hợp lệ cho việc sắp xếp lại.",
+                    message: "Invalid image list for reordering.",
                     type: ErrorType.Validation);
             }
 
@@ -138,10 +143,10 @@ namespace BookStore.Application.Services.Catalog.Book
             {
                 var image = images.First(img => img.Id == imageIds[i]);
                 image.DisplayOrder = i + 1;
-                _uow.BookImage.Update(image);
+                _bookImages.Update(image);
             }
 
-            await _uow.SaveChangesAsync();
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
     }
