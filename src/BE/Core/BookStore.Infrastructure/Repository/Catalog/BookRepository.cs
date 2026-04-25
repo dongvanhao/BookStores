@@ -3,21 +3,12 @@ using BookStore.Domain.IRepository.Catalog;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Repository.Common;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BookStore.Infrastructure.Repository.Catalog
 {
-    public class BookRepository : GenericRepository<Book>,IBookRepository
+    public class BookRepository : GenericRepository<Book>, IBookRepository
     {
-        private readonly AppDbContext _context;
-        public BookRepository(AppDbContext context) : base(context)
-        {
-            _context = context;
-        }
+        public BookRepository(AppDbContext context) : base(context) { }
 
         public async Task<bool> ExistsByISBNAsync(string isbn)
         {
@@ -45,54 +36,38 @@ namespace BookStore.Infrastructure.Repository.Catalog
                 .AsNoTracking()
                 .ToListAsync();
         }
-        public async Task<IReadOnlyList<Book>> GetBooksForChatbotAsync(
-    int take,
-    CancellationToken cancellationToken = default)
+
+        public async Task<(IReadOnlyList<Book> Items, int Total)> SearchAsync(
+            string? keyword, Guid? authorId, Guid? categoryId, int skip, int take)
         {
-            return await _context.Books
-                .AsNoTracking()
-                .Where(b => b.IsAvailable)
-                .OrderByDescending(b => b.PublicationYear)
+            var query = _dbSet
+                .Include(x => x.Publisher)
+                .Include(x => x.BookAuthors).ThenInclude(x => x.Author)
+                .Include(x => x.BookCategories).ThenInclude(x => x.Category)
+                .Where(x => x.IsAvailable)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+                query = query.Where(x =>
+                    x.Title.Contains(keyword) ||
+                    (x.Description != null && x.Description.Contains(keyword)) ||
+                    x.ISBN.Contains(keyword));
+
+            if (authorId.HasValue)
+                query = query.Where(x => x.BookAuthors.Any(ba => ba.AuthorId == authorId.Value));
+
+            if (categoryId.HasValue)
+                query = query.Where(x => x.BookCategories.Any(bc => bc.CategoryId == categoryId.Value));
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(x => x.PublicationYear)
+                .Skip(skip)
                 .Take(take)
-                .Select(b => new Book
-                {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Description = b.Description,
-                    PublicationYear = b.PublicationYear,
+                .AsNoTracking()
+                .ToListAsync();
 
-                    Publisher = b.Publisher == null
-                        ? null!
-                        : new Publisher
-                        {
-                            Name = b.Publisher.Name
-                        },
-
-                    BookAuthors = b.BookAuthors
-                        .Where(ba => ba.Author != null)
-                        .Select(ba => new BookAuthor
-                        {
-                            Author = new Author
-                            {
-                                Name = ba.Author!.Name
-                            }
-                        })
-                        .ToList(),
-
-                    BookCategories = b.BookCategories
-                        .Where(bc => bc.Category != null)
-                        .Select(bc => new BookCategory
-                        {
-                            Category = new Category
-                            {
-                                Name = bc.Category!.Name
-                            }
-                        })
-                        .ToList()
-                })
-                .ToListAsync(cancellationToken);
+            return (items, total);
         }
-
-
     }
 }

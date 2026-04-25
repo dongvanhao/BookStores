@@ -1,38 +1,12 @@
-﻿using BookStore.API.Middlewares;
-using BookStore.Application.IService.Catalog.Author;
-using BookStore.Application.IService.Catalog.Book;
-using BookStore.Application.IService.Catalog.Category;
-using BookStore.Application.IService.Catalog.Publisher;
-using BookStore.Application.IService.Chatbot;
-using BookStore.Application.IService.Identity;
-using BookStore.Application.IService.Ordering_Payment;
-using BookStore.Application.IService.Pricing_Inventory;
-using BookStore.Application.IService.Storage;
+using BookStore.API.Extensions;
+using BookStore.API.Middlewares;
 using BookStore.Application.Options;
-using BookStore.Application.Services.Catalog;
-using BookStore.Application.Services.Catalog.Author;
-using BookStore.Application.Services.Catalog.Book;
-using BookStore.Application.Services.Catalog.Category;
-using BookStore.Application.Services.Catalog.Publisher;
-using BookStore.Application.Services.Chatbot;
 using BookStore.Application.Services.Identity;
-using BookStore.Application.Services.IDentity;
-using BookStore.Application.Services.Ordering_Payment;
-using BookStore.Application.Services.Pricing_Inventory;
-using BookStore.Domain.IRepository.Catalog;
-using BookStore.Domain.IRepository.Common;
-using BookStore.Domain.IRepository.Identity;
-using BookStore.Domain.IRepository.Ordering_Payment;
-using BookStore.Domain.IRepository.Pricing___Inventory;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Data.DataSeeder;
 using BookStore.Infrastructure.MinIO;
-using BookStore.Infrastructure.Repository.Catalog;
-using BookStore.Infrastructure.Repository.Common;
-using BookStore.Infrastructure.Repository.Identity;
-using BookStore.Infrastructure.Repository.Ordering_Payment;
-using BookStore.Infrastructure.Repository.Pricing___Inventory;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -44,140 +18,64 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =====================================
-// 1. CONNECTION STRING
-// =====================================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Missing DefaultConnection");
 
-
-// =====================================
-// 2. DB CONTEXT + RETRY (Docker-friendly)
-// =====================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString, sql =>
-    {
-        sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
-    }));
+        sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
 
 builder.Services.AddHealthChecks();
 
-// =====================================
-// 3. REPOSITORIES & SERVICES
-// =====================================
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
-builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
-builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
-builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-//User Related
-builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
-builder.Services.AddScoped<IUserAddressRepository, UserAddressRepository>();
-builder.Services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
-//Catalog Reportories
-builder.Services.AddScoped<IBookRepository, BookRepository>();
-builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
-builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
-builder.Services.AddScoped<IBookFileRepository, BookFileRepository>();
-builder.Services.AddScoped<IBookFormatRepository, BookFormatRepository>();
-builder.Services.AddScoped<IBookImageRepository, BookImageRepository>();
-builder.Services.AddScoped<IBookMetadataRepository, BookMetadataRepository>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IBookAuthorRepository, BookAuthorRepository>();
-builder.Services.AddScoped<IBookCategoryRepository, BookCategoryRepository>();
-//Order&Payment Repositories
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
-builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
-builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
-builder.Services.AddScoped<ICartRepository, CartRepository>();
-builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
-builder.Services.AddScoped<IOrderHistoryRepository, OrderHistoryRepository>();
-builder.Services.AddScoped<IOrderStatusLogRepository, OrderStatusLogRepository>();
-builder.Services.AddScoped<IRefundRepository, RefundRepository>();
-//Pricing & Inventory Repositories
-builder.Services.AddScoped<ICouponRepository, CouponRepository>();
-builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
-builder.Services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
-builder.Services.AddScoped<IPriceRepository, PriceRepository>();
-builder.Services.AddScoped<IStockItemRepository, StockItemRepository>();
-builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IHashingService, BcryptHasingService>();
-builder.Services.AddScoped<IEmailSender, EmailSenderFake>();
-//User Related Service
-builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-builder.Services.AddScoped<IUserAddressService, UserAddressService>();
-builder.Services.AddScoped<IUserDeviceService, UserDeviceService>();
-//CataLog Services
-builder.Services.AddScoped<IAuthorService, AuthorService>();
-builder.Services.AddScoped<IBookFileService, BookFileService>();
-builder.Services.AddScoped<IBookFormatService, BookFormatService>();
-builder.Services.AddScoped<IBookImageService, BookImageService>();
-builder.Services.AddScoped<IBookMetadataService, BookMetadataService>();
-builder.Services.AddScoped<IBookService, BookService>();
-builder.Services.AddScoped<IPublisherService, PublisherService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IBookAuthorService, BookAuthorService>();
-builder.Services.AddScoped<IBookCategoryService, BookCategoryService>();
-//Order&Payment Services
-
-builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
-builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<IRefundService, RefundService>();
-builder.Services.AddScoped<IOrderHistoryService, OrderHistoryService>();
-builder.Services.AddScoped<IOrderStatusLogService, OrderStatusLogService>();
-builder.Services.AddScoped<ICartItemService,CartItemService>();
-
-//Pricing & Inventory Services
-builder.Services.AddScoped<ICouponService, CouponService>();
-builder.Services.AddScoped<IDiscountService, DiscountService>();
-builder.Services.AddScoped<IInventoryTransactionService, InventoryTransactionService>();
-builder.Services.AddScoped<IPriceService, PriceService>();
-builder.Services.AddScoped<IStockItemService, StockItemService>();
-builder.Services.AddScoped<IWarehouseService, WarehouseService>();
-//Gemini Service
-builder.Services.AddScoped<IGeminiService, GeminiService>();
-builder.Services.AddScoped<IChatBotService, ChatBotService>();
-
+builder.Services.AddRepositories();
+builder.Services.AddApplicationServices();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
-// =====================================
-// 4. CONTROLLERS (camelCase JSON)
-// =====================================
 builder.Services.AddControllers()
     .AddJsonOptions(opt =>
     {
         opt.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         opt.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    })
+    .ConfigureApiBehaviorOptions(opt =>
+    {
+        opt.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+
+            return new BadRequestObjectResult(new
+            {
+                title = "Validation.Failed",
+                detail = "One or more validation errors occurred.",
+                errors
+            });
+        };
     });
 
-// =====================================
-// 5. CORS
-// =====================================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Default", policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    if (builder.Environment.IsDevelopment())
+    {
+        options.AddPolicy("Default", policy =>
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    }
+    else
+    {
+        var clientUrl = builder.Configuration["AppSettings:ClientBaseUrl"] ?? "";
+        options.AddPolicy("Default", policy =>
+            policy.WithOrigins(clientUrl).AllowAnyMethod().AllowAnyHeader());
+    }
 });
 
-// =====================================
-// 6. JWT AUTH
-// =====================================
 var jwt = builder.Configuration.GetSection("JwtOptions");
-var jwtKey = jwt["Key"];
-
-if (string.IsNullOrWhiteSpace(jwtKey))
-    throw new Exception("JwtOptions:Key is missing");
+var jwtKey = jwt["Key"] ?? throw new InvalidOperationException("JwtOptions:Key is missing");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opt =>
@@ -196,9 +94,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// =====================================
-// 7. SWAGGER
-// =====================================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -220,60 +115,36 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
-    c.MapType<IFormFile>(() => new OpenApiSchema
-    {
-        Type = "string",
-        Format = "binary"
-    });
+    c.MapType<IFormFile>(() => new OpenApiSchema { Type = "string", Format = "binary" });
 });
-// =====================================
-// MinIO
-// =====================================
+
 builder.Services.Configure<MinIOOptions>(builder.Configuration.GetSection("MinIO"));
 
 builder.Services.AddSingleton<IMinioClient>(sp =>
 {
     var config = sp.GetRequiredService<IOptions<MinIOOptions>>().Value;
-
     return new MinioClient()
         .WithEndpoint(config.Endpoint)
         .WithCredentials(config.AccessKey, config.SecretKey)
         .WithSSL(config.UseSSL)
         .Build();
 });
-builder.Services.AddScoped<IStorageService, MinioStorageService>();
-// Gemini Options
-builder.Services.Configure<GeminiOptions>(
-    builder.Configuration.GetSection("Gemini"));
 
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-// =====================================
-// 8. AUTO MIGRATION + SEEDING
-// =====================================
 await EnsureDatabaseReadyAsync(app);
+
 var minio = app.Services.GetRequiredService<IMinioClient>();
 var minioOptions = app.Services.GetRequiredService<IOptions<MinIOOptions>>().Value;
 
-bool exists = await minio.BucketExistsAsync(
-    new BucketExistsArgs().WithBucket(minioOptions.BucketName));
+if (!await minio.BucketExistsAsync(new BucketExistsArgs().WithBucket(minioOptions.BucketName)))
+    await minio.MakeBucketAsync(new MakeBucketArgs().WithBucket(minioOptions.BucketName));
 
-if (!exists)
-{
-    await minio.MakeBucketAsync(
-        new MakeBucketArgs().WithBucket(minioOptions.BucketName));
-}
-
-// =====================================
-// 9. PIPELINE
-// =====================================
 app.MapHealthChecks("/health");
-
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.UseMiddleware<ExceptionMiddleware>();
 
 if (!app.Environment.IsDevelopment())
@@ -281,26 +152,19 @@ if (!app.Environment.IsDevelopment())
 
 app.UseRouting();
 app.UseCors("Default");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
 
 
-// =====================================================
-// HELPERS — clean, tách biệt rõ ràng
-// =====================================================
 async Task EnsureDatabaseReadyAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
     var db = services.GetRequiredService<AppDbContext>();
-
-    logger.LogInformation("⏳ Checking database...");
 
     int retries = 5;
     while (retries > 0)
@@ -310,27 +174,21 @@ async Task EnsureDatabaseReadyAsync(WebApplication app)
             if (db.Database.GetPendingMigrations().Any())
             {
                 await db.Database.MigrateAsync();
-                logger.LogInformation("✅ Migration applied.");
-            }
-            else
-            {
-                logger.LogInformation("✅ Database already up-to-date.");
+                logger.LogInformation("Migration applied.");
             }
 
             await DataSeederRole.SeedRoleAsync(services);
-            logger.LogInformation("🌱 Seed completed.");
-
             return;
         }
         catch (Exception ex)
         {
             retries--;
-            logger.LogWarning($"⚠️ SQL not ready. Retrying... ({retries} left). Error: {ex.Message}");
+            logger.LogWarning("SQL server not ready, retrying... ({Retries} left). Error: {Message}", retries, ex.Message);
 
             if (retries == 0)
             {
-                logger.LogError("❌ Migration failed after retries.");
-                return; // Không throw để app vẫn start, bạn xem log trong container
+                logger.LogError("Migration failed after retries.");
+                return;
             }
 
             await Task.Delay(3000);

@@ -53,9 +53,9 @@ namespace BookStore.API.Controllers.Auth
         //}
 
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] AuthDto.ForgotPasswordDto dto, [FromQuery] string clientUrl)
+        public async Task<IActionResult> ForgotPassword([FromBody] AuthDto.ForgotPasswordDto dto)
         {
-            var result = await _auth.ForgotPasswordAsync(dto.Email, clientUrl);
+            var result = await _auth.ForgotPasswordAsync(dto.Email);
             return FromResult(result);
         }
 

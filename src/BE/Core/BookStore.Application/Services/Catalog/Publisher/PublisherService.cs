@@ -1,8 +1,7 @@
-﻿using BookStore.Application.Dtos.CatalogDto.Publisher;
+using BookStore.Application.Dtos.CatalogDto.Publisher;
 using BookStore.Application.IService.Catalog.Publisher;
 using BookStore.Application.Mappers.Catalog.Publisher;
 using BookStore.Domain.Entities.Catalog;
-using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
 using BookStore.Shared.Utilities;
 using System;
@@ -10,15 +9,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookStore.Domain.IRepository.Common;
+using BookStore.Domain.IRepository.Catalog;
 
 namespace BookStore.Application.Services.Catalog.Publisher
 {
     public class PublisherService : IPublisherService
     {
-        private readonly IUnitOfWork _uow;
-        public PublisherService(IUnitOfWork uow)
+        private readonly IPublisherRepository _publishers;
+        private readonly IDbSession _session;
+        public PublisherService(IPublisherRepository publishers, IDbSession session)
         {
-            _uow = uow;
+            _publishers = publishers;
+            _session = session;
         }
         public async Task<BaseResult<PublisherResponseDto>> CreateAsync(CreatePublisherDto request)
         {
@@ -29,11 +32,11 @@ namespace BookStore.Application.Services.Catalog.Publisher
             }
             var name = request.Name.NormalizeSpace();
 
-            if (await _uow.Publishers.ExitsByNameAsync(name))
+            if (await _publishers.ExitsByNameAsync(name))
             {
                 return BaseResult<PublisherResponseDto>.Fail(
                     code: "Publisher.Exists",
-                    message: $"Nhà xuất bản với tên '{name}' đã tồn tại.",
+                    message: $"Publisher with name '{name}' already exists.",
                     type: ErrorType.Validation);
             }
             var publisher = new Domain.Entities.Catalog.Publisher
@@ -44,32 +47,32 @@ namespace BookStore.Application.Services.Catalog.Publisher
                 Email = request.Email,
                 PhoneNumber = request.PhoneNumber
             };
-            await _uow.Publishers.AddAsync(publisher);
-            await _uow.SaveChangesAsync();
+            await _publishers.AddAsync(publisher);
+            await _session.SaveChangesAsync();
             return BaseResult<PublisherResponseDto>.Ok(publisher.ToResponse());
         }
 
         public async Task<BaseResult<bool>> DeleteAsync(Guid id)
         {
-            var publisher = await _uow.Publishers.GetByIdAsync(id);
+            var publisher = await _publishers.GetByIdAsync(id);
 
             if(publisher == null)
             {
                 return BaseResult<bool>.Fail(
                     code: "Publisher.NotFound",
-                    message: $"Không tìm thấy nhà xuất bản với Id '{id}'.",
+                    message: $"Publisher with Id '{id}' not found.",
                     type: ErrorType.NotFound);
             }
 
-            _uow.Publishers.Delete(publisher);
-            await _uow.SaveChangesAsync();
+            _publishers.Delete(publisher);
+            await _session.SaveChangesAsync();
 
             return BaseResult<bool>.Ok(true);
         }
 
         public async Task<BaseResult<IReadOnlyList<PublisherResponseDto>>> GetAllAsync()
         {
-            var publishers = await _uow.Publishers.GetListAsync(
+            var publishers = await _publishers.GetListAsync(
                     orderBy: q => q.OrderBy(p => p.Name)
                 );
             return BaseResult<IReadOnlyList<PublisherResponseDto>>.Ok(
@@ -79,12 +82,12 @@ namespace BookStore.Application.Services.Catalog.Publisher
 
         public async Task<BaseResult<PublisherResponseDto>> GetByIdAsync(Guid id)
         {
-            var publisher = await _uow.Publishers.GetByIdAsync(id);
+            var publisher = await _publishers.GetByIdAsync(id);
             if (publisher == null)
             {
                 return BaseResult<PublisherResponseDto>.Fail(
                     code: "Publisher.NotFound",
-                    message: $"Không tìm thấy nhà xuất bản với Id '{id}'.",
+                    message: $"Publisher with Id '{id}' not found.",
                     type: ErrorType.NotFound);
             }
             return BaseResult<PublisherResponseDto>.Ok(publisher.ToResponse());
@@ -92,12 +95,12 @@ namespace BookStore.Application.Services.Catalog.Publisher
 
         public async Task<BaseResult<PublisherResponseDto>> UpdateAsync(Guid id, UpdatePublisherRequestDto request)
         {
-            var publisher = await _uow.Publishers.GetByIdAsync(id);
+            var publisher = await _publishers.GetByIdAsync(id);
             if (publisher == null)
             {
                 return BaseResult<PublisherResponseDto>.Fail(
                     code: "Publisher.NotFound",
-                    message: $"Không tìm thấy nhà xuất bản với Id '{id}'.",
+                    message: $"Publisher with Id '{id}' not found.",
                     type: ErrorType.NotFound);
             }
             publisher.Name = request.Name.NormalizeSpace();
@@ -105,8 +108,8 @@ namespace BookStore.Application.Services.Catalog.Publisher
             publisher.Email = request.Email;
             publisher.PhoneNumber = request.PhoneNumber;
 
-            _uow.Publishers.Update(publisher);
-            await _uow.SaveChangesAsync();
+            _publishers.Update(publisher);
+            await _session.SaveChangesAsync();
             return BaseResult<PublisherResponseDto>.Ok(publisher.ToResponse());
         }
     }

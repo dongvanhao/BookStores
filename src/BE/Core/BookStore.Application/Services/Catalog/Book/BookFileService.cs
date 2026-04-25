@@ -1,8 +1,7 @@
-﻿using BookStore.Application.Dtos.CatalogDto.Book;
+using BookStore.Application.Dtos.CatalogDto.Book;
 using BookStore.Application.IService.Catalog.Book;
 using BookStore.Application.IService.Storage;
 using BookStore.Application.Mappers.Catalog.Book;
-using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -10,33 +9,39 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookStore.Domain.IRepository.Common;
+using BookStore.Domain.IRepository.Catalog;
 
 namespace BookStore.Application.Services.Catalog.Book
 {
     public class BookFileService : IBookFileService
     {
        
-        private readonly IUnitOfWork _uow;
+        private readonly IBookRepository _books;
+        private readonly IBookFileRepository _bookFiles;
+        private readonly IDbSession _session;
         private readonly IStorageService _storage;
-        public BookFileService(IUnitOfWork uow, IStorageService storage)
+        public BookFileService(IBookRepository books, IBookFileRepository bookFiles, IDbSession session, IStorageService storage)
         {
-            _uow = uow;
+            _books = books;
+            _bookFiles = bookFiles;
+            _session = session;
             _storage = storage;
         }
         public async Task<BaseResult<BookFileResponseDto>> UploadAsync(Guid bookId, IFormFile file, UploadBookFileRequestDto request)
         {
-            var book = await _uow.Books.GetByIdAsync(bookId);
+            var book = await _books.GetByIdAsync(bookId);
             if (book == null)
             {
                 return BaseResult<BookFileResponseDto>.NotFound(
-                    $"Không tìm thấy sách với Id '{bookId}'."
+                    $"Book with Id '{bookId}' not found."
                 );
             }
             if (file == null || file.Length == 0)
             {
                 return BaseResult<BookFileResponseDto>.Fail(
                     code: "BookFile.InvalidFile",
-                    message: "Tệp tin không hợp lệ hoặc trống.",
+                    message: "Invalid or empty file.",
                     type: ErrorType.Validation
                 );
             }
@@ -54,7 +59,7 @@ namespace BookStore.Application.Services.Catalog.Book
             {
                 return BaseResult<BookFileResponseDto>.Fail(
                     code: "BookFile.UploadFailed",
-                    message: "Tải tệp tin lên kho lưu trữ thất bại.",
+                    message: "Failed to upload file to storage.",
                     type: ErrorType.Internal
                 );
             }
@@ -70,22 +75,22 @@ namespace BookStore.Application.Services.Catalog.Book
                 IsPreview = request.IsPreview
             };
 
-            await _uow.BookFile.AddAsync(bookFile);
-            await _uow.SaveChangesAsync();
+            await _bookFiles.AddAsync(bookFile);
+            await _session.SaveChangesAsync();
 
             return BaseResult<BookFileResponseDto>.Ok(bookFile.ToResponse());
         }
 
         public async Task<BaseResult<IReadOnlyList<BookFileResponseDto>>> GetAllByBookIdAsync(Guid BookId)
         {
-            var book = await _uow.Books.GetByIdAsync(BookId);
+            var book = await _books.GetByIdAsync(BookId);
             if (book == null)
             {
                 return BaseResult<IReadOnlyList<BookFileResponseDto>>.NotFound(
                     $"Không tìm thấy sách với Id '{BookId}'."
                 );
             }
-            var files = await _uow.BookFile.GetByBookIdAsync(BookId);
+            var files = await _bookFiles.GetByBookIdAsync(BookId);
 
             return BaseResult<IReadOnlyList<BookFileResponseDto>>.Ok(
                 files.Select(f => f.ToResponse()).ToList()
@@ -93,16 +98,16 @@ namespace BookStore.Application.Services.Catalog.Book
         }
         public async Task<BaseResult<bool>> DeleteAsync(Guid BookId, Guid fileId)
         {
-            var file = await _uow.BookFile.GetByIdAsync(fileId);
+            var file = await _bookFiles.GetByIdAsync(fileId);
 
             if (file == null || file.BookId != BookId)
             {
                 return BaseResult<bool>.NotFound(
-                    $"Không tìm thấy tệp tin với Id '{fileId}' cho sách với Id '{BookId}'."
+                    $"File with Id '{fileId}' not found for book with Id '{BookId}'."
                 );
             }
-            _uow.BookFile.Delete(file);
-            await _uow.SaveChangesAsync();
+            _bookFiles.Delete(file);
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
     }

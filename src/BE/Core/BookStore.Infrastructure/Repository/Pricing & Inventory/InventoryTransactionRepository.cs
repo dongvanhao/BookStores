@@ -25,10 +25,10 @@ namespace BookStore.Infrastructure.Repository.Pricing___Inventory
                 .ToListAsync();
         }
 
-        public async Task<int> GetStockAsync(Guid bookId, Guid warehouseId)
+        public async Task<int> GetStockAsync(Guid bookId)
         {
             return await _context.InventoryTransactions
-                .Where(x => x.BookId == bookId && x.WarehouseId == warehouseId)
+                .Where(x => x.BookId == bookId)
                 .SumAsync(x => x.QuantityChange);
         }
     }

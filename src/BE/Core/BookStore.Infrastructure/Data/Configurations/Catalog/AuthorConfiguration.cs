@@ -19,7 +19,7 @@ namespace BookStore.Infrastructure.Data.Configurations.Catalog
             builder.Property(a => a.Biography)
                 .HasMaxLength(2000);
 
-            builder.Property(a => a.AvartarUrl)
+            builder.Property(a => a.AvatarUrl)
                 .HasMaxLength(500);
         }
     }

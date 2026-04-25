@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookStore.Application.Dtos.Ordering_Payment.Cart
 {
-    public class AddCartItemRequestDto
-    {
-        public Guid BookId { get; set; }
-        public int Quantity { get; set; }
-    }
+    public record AddCartItemRequestDto(
+        [Required] Guid BookId,
+        [Range(1, 100)] int Quantity
+    );
 }

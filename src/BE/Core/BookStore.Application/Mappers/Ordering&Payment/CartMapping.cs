@@ -15,7 +15,7 @@ namespace BookStore.Application.Mappers.Ordering_Payment
             return new CartResponseDto
             {
                 Id = cart.Id,
-                IsActive = cart.IsActive,
+                IsActive = true,
                 CreatedAt = cart.CreatedAt,
                 TotalItems = cart.Items.Count
             };

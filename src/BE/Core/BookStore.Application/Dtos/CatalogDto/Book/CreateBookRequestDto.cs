@@ -1,26 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookStore.Application.Dtos.CatalogDto.Book
 {
-    public class CreateBookRequestDto
-    {
-        public string Title { get; set; } = null!;
-        public string ISBN { get; set; } = null!;
-        public string Description { get; set; } = null!;
-        public int PublicationYear { get; set; }
-        public string Language { get; set; } = "vi";
-        public string? Edition { get; set; }
-        public int PageCount { get; set; }
-
-        public Guid PublisherId { get; set; }
-
-        // gán ngay khi tạo
-        public List<Guid> AuthorIds { get; set; } = new();
-        public List<Guid> CategoryIds { get; set; } = new();
-
-    }
+    public record CreateBookRequestDto(
+        [Required][MaxLength(500)] string Title,
+        [Required][MaxLength(20)] string ISBN,
+        [MaxLength(5000)] string? Description,
+        [Range(1000, 2100)] int PublicationYear,
+        [MaxLength(50)] string? Language,
+        [MaxLength(50)] string? Edition,
+        [Range(1, 10000)] int? PageCount,
+        [Required] Guid PublisherId,
+        List<Guid> AuthorIds,
+        List<Guid> CategoryIds
+    );
 }

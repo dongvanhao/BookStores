@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Ordering_Payment;
+﻿using BookStore.Domain.Entities.Ordering;
 using BookStore.Domain.IRepository.Ordering_Payment;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Repository.Common;

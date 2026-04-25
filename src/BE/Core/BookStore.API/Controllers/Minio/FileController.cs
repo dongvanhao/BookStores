@@ -41,11 +41,9 @@ namespace BookStore.API.Controllers.Minio
         public async Task<IActionResult> Download(string objectKey)
         {
             var result = await _storage.DownloadAsync(objectKey);
-
-            return result.Match<IActionResult>(
-                onSuccess: stream => File(stream, "application/octet-stream", objectKey),
-                onFailure: error => CreateErrorResponse(error) // từ BaseController
-            );
+            if (!result.IsSuccess)
+                return FromResult(result);
+            return File(result.Value!, "application/octet-stream", objectKey);
         }
 
         [HttpDelete("{objectKey}")]

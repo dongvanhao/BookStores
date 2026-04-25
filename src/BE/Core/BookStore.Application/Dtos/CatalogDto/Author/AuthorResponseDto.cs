@@ -11,6 +11,6 @@ namespace BookStore.Application.Dtos.CatalogDto.Author
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
         public string? Biography { get; set; }
-        public string? AvartarUrl { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 }

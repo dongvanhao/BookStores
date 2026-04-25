@@ -1,141 +1,123 @@
-﻿using BookStore.Application.Dtos.Ordering_Payment.Order;
+using BookStore.Application.Dtos.Ordering_Payment.Order;
 using BookStore.Application.IService.Ordering_Payment;
 using BookStore.Application.Mappers.Ordering_Payment;
 using BookStore.Domain.Entities.Ordering;
-using BookStore.Domain.Entities.Ordering_Payment;
-using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BookStore.Domain.IRepository.Common;
+using BookStore.Domain.IRepository.Identity;
+using BookStore.Domain.IRepository.Ordering_Payment;
 
 namespace BookStore.Application.Services.Ordering_Payment
 {
     public class OrderService : IOrderService
     {
-        private readonly IUnitOfWork _uow;
-        public OrderService(IUnitOfWork uow) { _uow = uow; }
+        private readonly IUserAddressRepository _userAddresses;
+        private readonly ICartRepository _carts;
+        private readonly IOrderRepository _orders;
+        private readonly IOrderStatusLogRepository _orderStatusLogs;
+        private readonly IDbSession _session;
+
+        public OrderService(
+            IUserAddressRepository userAddresses,
+            ICartRepository carts,
+            IOrderRepository orders,
+            IOrderStatusLogRepository orderStatusLogs,
+            IDbSession session)
+        {
+            _userAddresses = userAddresses;
+            _carts = carts;
+            _orders = orders;
+            _orderStatusLogs = orderStatusLogs;
+            _session = session;
+        }
 
         public async Task<BaseResult<IReadOnlyList<OrderSummaryDto>>> GetMyOrderAsync(Guid userId)
         {
-            var orders = await _uow.Order.GetByUserAsync(userId);
+            var orders = await _orders.GetByUserAsync(userId);
             return BaseResult<IReadOnlyList<OrderSummaryDto>>.Ok(
-                orders.Select(o => o.ToSummary()).ToList()
-            );
+                orders.Select(o => o.ToSummary()).ToList());
         }
 
         public async Task<BaseResult<OrderDetailDto>> GetDetailAsync(Guid userId, Guid orderId)
         {
-            var order = await _uow.Order.GetDetailAsync(orderId, userId);
+            var order = await _orders.GetDetailAsync(orderId, userId);
             if (order == null)
-                return BaseResult<OrderDetailDto>.NotFound("Không tìm thấy đơn hàng");
+                return BaseResult<OrderDetailDto>.NotFound("Order not found.");
 
             return BaseResult<OrderDetailDto>.Ok(order.ToDetail());
         }
 
         public async Task<BaseResult<bool>> CancelAsync(Guid userId, Guid orderId)
         {
-            var order = await _uow.Order.GetByIdAsync(orderId);
+            var order = await _orders.GetByIdAsync(orderId);
             if (order == null || order.UserId != userId)
                 return BaseResult<bool>.NotFound();
 
-            if (order.Status != "Pending")
+            if (order.Status != OrderStatus.Pending)
                 return BaseResult<bool>.Fail(
                     "Order.CannotCancel",
-                    "Chỉ được hủy đơn khi chưa thanh toán",
-                    ErrorType.Conflict
-                );
+                    "Order can only be cancelled when status is Pending.",
+                    ErrorType.Conflict);
 
             var oldStatus = order.Status;
-
-            order.Status = "Cancelled";
+            order.Status = OrderStatus.Cancelled;
             order.CancelledAt = DateTime.UtcNow;
-            _uow.Order.Update(order);
+            _orders.Update(order);
 
-            // ✅ OrderStatusLog
-            await _uow.OrderStatusLog.AddAsync(new OrderStatusLog
+            await _orderStatusLogs.AddAsync(new OrderStatusLog
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
                 OldStatus = oldStatus,
-                NewStatus = "Cancelled",
-                ChangedAt = DateTime.UtcNow,
-                ChangedBy = "User"
+                NewStatus = OrderStatus.Cancelled,
+                ChangedAt = DateTime.UtcNow
             });
 
-            // ✅ OrderHistory
-            await _uow.OrderHistory.AddAsync(new OrderHistory
-            {
-                Id = Guid.NewGuid(),
-                OrderId = order.Id,
-                Action = "CancelOrder",
-                Details = "User hủy đơn hàng khi chưa thanh toán",
-                CreatedAt = DateTime.UtcNow
-            });
-
-            await _uow.SaveChangesAsync();
-
+            await _session.SaveChangesAsync();
 
             return BaseResult<bool>.Ok(true);
         }
 
         public async Task<BaseResult<CheckoutResponseDto>> CheckoutAsync(Guid userId, CheckoutRequestDto request)
         {
-            // 1️⃣ Lấy cart active
-            var cart = await _uow.Cart.GetActiveByUserAsync(userId);
+            var cart = await _carts.GetActiveByUserAsync(userId);
             if (cart == null || !cart.Items.Any())
                 return BaseResult<CheckoutResponseDto>.Fail(
                     "Checkout.EmptyCart",
-                    "Giỏ hàng trống",
-                    ErrorType.Validation
-                );
-            var userAddress = await _uow.UserAddresses.GetByIdAsync(request.AddressId);
+                    "Cart is empty.",
+                    ErrorType.Validation);
+
+            var userAddress = await _userAddresses.GetByIdAsync(request.AddressId);
             if (userAddress == null || userAddress.UserId != userId)
                 return BaseResult<CheckoutResponseDto>.Fail(
                     "Checkout.InvalidAddress",
-                    "Địa chỉ không hợp lệ",
-                    ErrorType.Validation
-                );
-            // 2️⃣ Tính tổng tiền
+                    "Invalid delivery address.",
+                    ErrorType.Validation);
+
             var totalAmount = cart.Items.Sum(i => i.Quantity * i.UnitPrice);
 
-            // 3️⃣ Áp coupon (sandbox – chưa xử lý thật)
-            decimal discount = 0;
-            if (request.CouponId.HasValue)
-            {
-                // TODO: validate coupon
-                discount = 0;
-            }
-
-            // 4️⃣ Tạo Order
             var order = new Order
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                Status = "Pending",
+                Status = OrderStatus.Pending,
                 OrderNumber = GenerateOrderNumber(),
-                TotalAmount = totalAmount,
-                DiscountAmount = discount,
+                SubTotal = totalAmount,
+                DiscountAmount = 0,
             };
-            var orderAddress = new OrderAddress
+
+            order.ShippingAddress = new OrderAddress
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
-
-                RecipientName = userAddress.ReipientName,
+                RecipientName = userAddress.RecipientName,
                 PhoneNumber = userAddress.PhoneNumber,
-                Province = userAddress.Povince,
+                Province = userAddress.Province,
                 District = userAddress.District,
                 Ward = userAddress.Ward,
                 Street = userAddress.StreetAddress
             };
 
-            // 🔗 GẮN VÀO ORDER (quan trọng)
-            order.OrderAddress = orderAddress;
-
-            // 5️⃣ Tạo OrderItem từ CartItem
             foreach (var cartItem in cart.Items)
             {
                 order.Items.Add(new OrderItem
@@ -147,34 +129,20 @@ namespace BookStore.Application.Services.Ordering_Payment
                 });
             }
 
-            // 6️⃣ Đóng cart
-            cart.IsActive = false;
-            _uow.Cart.Update(cart);
+            _carts.Delete(cart);
 
-            // 7️⃣ Persist
-            await _uow.Order.AddAsync(order);
-            // ✅ OrderStatusLog: null → Pending
-            await _uow.OrderStatusLog.AddAsync(new OrderStatusLog
+            await _orders.AddAsync(order);
+
+            await _orderStatusLogs.AddAsync(new OrderStatusLog
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
-                OldStatus = "None",
-                NewStatus = "Pending",
-                ChangedAt = DateTime.UtcNow,
-                ChangedBy = "User"
+                OldStatus = OrderStatus.Pending,
+                NewStatus = OrderStatus.Pending,
+                ChangedAt = DateTime.UtcNow
             });
 
-            // ✅ OrderHistory: Checkout
-            await _uow.OrderHistory.AddAsync(new OrderHistory
-            {
-                Id = Guid.NewGuid(),
-                OrderId = order.Id,
-                Action = "Checkout",
-                Details = $"User checkout đơn hàng với tổng tiền {order.FinalAmount:N0}",
-                CreatedAt = DateTime.UtcNow
-            });
-
-            await _uow.SaveChangesAsync();
+            await _session.SaveChangesAsync();
 
             return BaseResult<CheckoutResponseDto>.Ok(new CheckoutResponseDto
             {
@@ -183,11 +151,12 @@ namespace BookStore.Application.Services.Ordering_Payment
                 FinalAmount = order.FinalAmount
             });
         }
-        private string GenerateOrderNumber()
+
+        private static string GenerateOrderNumber()
         {
-            return $"BK-{DateTime.UtcNow:yyyyMMddHHmmss}";
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            var suffix = Guid.NewGuid().ToString("N")[..6].ToUpper();
+            return $"BK-{timestamp}-{suffix}";
         }
-
     }
-
 }

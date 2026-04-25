@@ -1,71 +1,60 @@
-﻿using BookStore.Application.IService.Pricing_Inventory;
+using BookStore.Application.IService.Pricing_Inventory;
 using BookStore.Domain.Entities.Pricing_Inventory;
-using BookStore.Domain.IRepository.Common;
 using BookStore.Shared.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BookStore.Domain.IRepository.Common;
+using BookStore.Domain.IRepository.Pricing___Inventory;
 
 namespace BookStore.Application.Services.Pricing_Inventory
 {
     public class InventoryTransactionService : IInventoryTransactionService
     {
-        private readonly IUnitOfWork _uow;
+        private readonly IInventoryTransactionRepository _inventoryTransactions;
+        private readonly IDbSession _session;
 
-        // Giả định 1 warehouse mặc định 
-        private readonly Guid _defaultWarehouseId
-            = Guid.Parse("11111111-1111-1111-1111-111111111111");
-
-        public InventoryTransactionService(IUnitOfWork uow)
+        public InventoryTransactionService(
+            IInventoryTransactionRepository inventoryTransactions,
+            IDbSession session)
         {
-            _uow = uow;
+            _inventoryTransactions = inventoryTransactions;
+            _session = session;
         }
 
         public async Task<BaseResult<bool>> OutboundAsync(
             Guid bookId, int quantity, string referenceId, string? note = null)
         {
-            var stock = await _uow.InventoryTransaction
-                .GetStockAsync(bookId, _defaultWarehouseId);
+            var stock = await _inventoryTransactions.GetStockAsync(bookId);
 
             if (stock < quantity)
-                return BaseResult<bool>.Fail(
-                    "Inventory.OutOfStock",
-                    "Không đủ tồn kho",
-                    ErrorType.Conflict
-                );
+                return BaseResult<bool>.Fail("Inventory.OutOfStock", "Insufficient stock.", ErrorType.Conflict);
 
-            await _uow.InventoryTransaction.AddAsync(new InventoryTransaction
+            await _inventoryTransactions.AddAsync(new InventoryTransaction
             {
                 Id = Guid.NewGuid(),
                 BookId = bookId,
-                WarehouseId = _defaultWarehouseId,
                 Type = InventoryTransactionType.Outbound,
                 QuantityChange = -quantity,
                 ReferenceId = referenceId,
                 Note = note
             });
 
-            await _uow.SaveChangesAsync();
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
 
         public async Task<BaseResult<bool>> InboundAsync(
             Guid bookId, int quantity, string referenceId, string? note = null)
         {
-            await _uow.InventoryTransaction.AddAsync(new InventoryTransaction
+            await _inventoryTransactions.AddAsync(new InventoryTransaction
             {
                 Id = Guid.NewGuid(),
                 BookId = bookId,
-                WarehouseId = _defaultWarehouseId,
                 Type = InventoryTransactionType.Inbound,
                 QuantityChange = quantity,
                 ReferenceId = referenceId,
                 Note = note
             });
 
-            await _uow.SaveChangesAsync();
+            await _session.SaveChangesAsync();
             return BaseResult<bool>.Ok(true);
         }
     }

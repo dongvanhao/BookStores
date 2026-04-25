@@ -1,4 +1,4 @@
-﻿using BookStore.Domain.Entities.Ordering_Payment;
+using BookStore.Domain.Entities.Ordering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,15 +13,17 @@ namespace BookStore.Infrastructure.Data.Configurations.Ordering
             builder.HasKey(s => s.Id);
 
             builder.Property(s => s.OldStatus)
+                .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
 
             builder.Property(s => s.NewStatus)
+                .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Property(s => s.ChangedBy)
-                .HasMaxLength(255);
+            builder.Property(s => s.Note)
+                .HasMaxLength(500);
         }
     }
 }
