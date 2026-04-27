@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -19,24 +19,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Minio" Version="6.0.2" />
-    <PackageReference Include="OpenIddict.AspNetCore" Version="5.7.0" />
-    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="5.7.0" />
-    <PackageReference Include="OpenIddict.Server" Version="5.7.0" />
-    <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="5.7.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BookStore.Application\BookStore.Application.csproj" />
     <ProjectReference Include="..\BookStore.Domain\BookStore.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Migrations\" />
-    <Folder Include="Repository\Analytics &amp; Activity\" />
-    <Folder Include="Repository\System\" />
-    <Folder Include="Repository\Shipping\" />
-    <Folder Include="Repository\Rental\" />
   </ItemGroup>
 
 </Project>
