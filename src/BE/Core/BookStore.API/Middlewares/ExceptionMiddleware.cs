@@ -1,40 +1,49 @@
-﻿using System.Text.Json;
+﻿// BookStore.API/Middleware/ExceptionMiddleware.cs
+namespace BookStore.API.Middleware;
 
-namespace BookStore.API.Middlewares
+public sealed class ExceptionMiddleware
 {
-    public class ExceptionMiddleware
+    private readonly RequestDelegate              _next;
+    private readonly ILogger<ExceptionMiddleware> _logger;
+
+    public ExceptionMiddleware(
+        RequestDelegate next,
+        ILogger<ExceptionMiddleware> logger)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionMiddleware> _logger;
+        _next   = next;
+        _logger = logger;
+    }
 
-        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
         {
-            _next = next;
-            _logger = logger;
+            await _next(context);
         }
-
-        public async Task InvokeAsync(HttpContext context)
+        catch (Exception ex)
         {
-            try
-            {
-                await _next(context);
-            }
-            catch (Exception ex)
-            {
-                // Log chi tiết lỗi hệ thống
-                _logger.LogError(ex, "Unhandled exception occurred.");
+            _logger.LogError(ex,
+                "Unhandled exception at {Path}: {Message}",
+                context.Request.Path,
+                ex.Message);
 
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-                var payload = new
-                {
-                    error = "Internal server error",
-                    traceId = context.TraceIdentifier
-                };
-
-                await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
-            }
+            await HandleAsync(context, ex);
         }
+    }
+
+    private static async Task HandleAsync(HttpContext context, Exception exception)
+    {
+        var (statusCode, message, errorCode) = exception switch
+        {
+            OperationCanceledException  => (499, "Request was cancelled.",        "Cancelled"),
+            UnauthorizedAccessException => (401, "Unauthorized.",                 "Unauthorized"),
+            _                           => (500, "An unexpected error occurred.", "InternalServerError")
+        };
+
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode  = statusCode;
+
+        var response = ApiResponse.Fail(message, errorCode);
+        await context.Response.WriteAsJsonAsync(response);
     }
 }
