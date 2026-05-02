@@ -1,4 +1,5 @@
-﻿// BookStore.API/Middleware/ExceptionMiddleware.cs
+﻿using BookStore.Shared.Responses;
+
 namespace BookStore.API.Middleware;
 
 public sealed class ExceptionMiddleware

@@ -1,6 +1,19 @@
-@BookStore.API_HostAddress = http://localhost:5276
+@host = http://localhost:5276
 
-GET {{BookStore.API_HostAddress}}/weatherforecast/
+### Backend alive
+GET {{host}}/health
+Accept: application/json
+
+###
+
+### Database connectivity
+GET {{host}}/health/database
+Accept: application/json
+
+###
+
+### MinIO connectivity (Degraded khi chưa đăng ký IMinioClient)
+GET {{host}}/health/minio
 Accept: application/json
 
 ###

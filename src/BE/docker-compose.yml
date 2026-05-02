@@ -1,21 +1,136 @@
 services:
-  api:
-    image: bookstore-api
-    depends_on:
-      - sqlserver
-      - minio
 
+  # ─── SQL Server ───────────────────────────────────────────────────
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SA_PASSWORD}
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
     volumes:
       - sql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -Q 'SELECT 1' -b -C > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - bookstore-net
 
+  # ─── MinIO (object storage cho ảnh sách / avatar) ─────────────────
   minio:
-    image: minio/minio
+    image: minio/minio:latest
     command: server /data --console-address ":9090"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9090:9090"   # MinIO Console UI
     volumes:
       - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bookstore-net
+
+  # ─── EF Migration runner — chạy 1 lần rồi thoát ──────────────────
+  # api sẽ chờ service này exit 0 (service_completed_successfully)
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    environment:
+      ConnectionStrings__DefaultConnection: >-
+        Server=sqlserver,1433;Database=BookStoreDB;
+        User Id=sa;Password=${SA_PASSWORD};
+        TrustServerCertificate=True;Encrypt=False
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - bookstore-net
+
+  # ─── API ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: >-
+        Server=sqlserver,1433;Database=BookStoreDB;
+        User Id=sa;Password=${SA_PASSWORD};
+        TrustServerCertificate=True;Encrypt=False
+      JwtOptions__Key: ${JwtOptions__Key}
+      JwtOptions__Issuer: ${JwtOptions__Issuer}
+      JwtOptions__Audience: ${JwtOptions__Audience}
+      Minio__Endpoint: ${MINIO_ENDPOINT}
+      Minio__AccessKey: ${MINIO_ACCESS}
+      Minio__SecretKey: ${MINIO_SECRET}
+      Minio__BucketName: ${MINIO_BUCKET}
+      ENABLE_SEED: ${ENABLE_SEED}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - bookstore-net
+
+  # ─── Add-migration (chạy thủ công với --profile tools) ────────────
+  # Dùng: MIGRATION_NAME=InitialCreate docker compose --profile tools run --rm add-migration
+  add-migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    volumes:
+      - type: bind
+        source: ./Core/BookStore.Infrastructure/Migrations
+        target: /src/Core/BookStore.Infrastructure/Migrations
+    environment:
+      ConnectionStrings__DefaultConnection: >-
+        Server=sqlserver,1433;Database=BookStoreDB;
+        User Id=sa;Password=${SA_PASSWORD};
+        TrustServerCertificate=True;Encrypt=False
+    command:
+      - "migrations"
+      - "add"
+      - "${MIGRATION_NAME:-InitialCreate}"
+      - "--project"
+      - "Core/BookStore.Infrastructure/BookStore.Infrastructure.csproj"
+      - "--startup-project"
+      - "Core/BookStore.API/BookStore.API.csproj"
+      - "--configuration"
+      - "Release"
+      - "--no-build"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    profiles:
+      - tools
+    networks:
+      - bookstore-net
 
 volumes:
   sql_data:
   minio_data:
+
+networks:
+  bookstore-net:
+    driver: bridge
