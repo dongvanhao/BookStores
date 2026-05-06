@@ -82,6 +82,9 @@ services:
       Minio__SecretKey: ${MINIO_SECRET}
       Minio__BucketName: ${MINIO_BUCKET}
       ENABLE_SEED: ${ENABLE_SEED}
+      SeedSettings__AdminEmail: ${SeedSettings__AdminEmail}
+      SeedSettings__AdminPassword: ${SeedSettings__AdminPassword}
+      SeedSettings__AdminFullName: ${SeedSettings__AdminFullName}
     depends_on:
       sqlserver:
         condition: service_healthy

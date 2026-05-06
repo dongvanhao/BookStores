@@ -1,6 +1,8 @@
 using BookStore.Application.Auth;
 using BookStore.Application.Auth.IService;
 using BookStore.Application.Auth.Services;
+using BookStore.Application.Categories.IService;
+using BookStore.Application.Categories.Services;
 using BookStore.API.Services;
 using BookStore.API.Validators;
 using BookStore.Domain.Entities;
@@ -46,6 +48,9 @@ public static class ServiceExtensions
         services.Configure<JwtOptions>(configuration.GetSection("JwtOptions"));
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ICategoryCommandService, CategoryCommandService>();
+        services.AddScoped<ICategoryQueryService, CategoryQueryService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddMemoryCache();
         services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
