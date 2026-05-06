@@ -1,6 +1,7 @@
 using BookStore.API.Extensions;
 using BookStore.API.Middleware;
 using BookStore.Application.Auth.IService;
+using BookStore.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+
+// Load .env cho local dev — production dùng environment variables thật
+// overwriteExistingVars: false → env vars thật của production không bị ghi đè bởi .env
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
+if (File.Exists(envPath))
+    DotNetEnv.Env.Load(envPath);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -132,6 +139,22 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+    }
+
+    var seedConfig  = app.Configuration.GetSection("SeedSettings");
+    var adminEmail  = seedConfig["AdminEmail"];
+    var adminPass   = seedConfig["AdminPassword"];
+    var adminName   = seedConfig["AdminFullName"] ?? "Administrator";
+
+    if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPass))
+    {
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        if (await userManager.FindByEmailAsync(adminEmail) is null)
+        {
+            var admin = ApplicationUser.Create(adminName, adminEmail, adminEmail);
+            await userManager.CreateAsync(admin, adminPass);
+            await userManager.AddToRoleAsync(admin, "Admin");
+        }
     }
 }
 
