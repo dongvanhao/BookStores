@@ -4,7 +4,8 @@ obj/
 .env/
 .env
 .env.*
-!.env.example
 .ENV
 .ENV.*
 *.user
+# Unignore example file — phải đặt SAU tất cả các pattern ignore
+!.env.example
