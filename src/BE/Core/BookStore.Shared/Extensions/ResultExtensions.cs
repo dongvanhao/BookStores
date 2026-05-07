@@ -22,6 +22,9 @@ public static class ResultExtensions
                                          ApiResponse<T>.Fail(result.Error.Description, result.Error.Code)),
             ErrorType.Unauthorized => new UnauthorizedObjectResult(
                                          ApiResponse<T>.Fail(result.Error.Description, result.Error.Code)),
+            ErrorType.Forbidden    => new ObjectResult(
+                                         ApiResponse<T>.Fail(result.Error.Description, result.Error.Code))
+                                         { StatusCode = 403 },
             _                      => new ObjectResult(ApiResponse<T>.Fail(result.Error.Description, result.Error.Code))
                                          { StatusCode = 500 }
         };
@@ -34,13 +37,20 @@ public static class ResultExtensions
 
         return result.Error.Type switch
         {
-            ErrorType.NotFound   => new NotFoundObjectResult(
-                                        ApiResponse.Fail(result.Error.Description, result.Error.Code)),
-            ErrorType.Validation => new BadRequestObjectResult(
-                                        ApiResponse.Fail(result.Error.Description, result.Error.Code)),
-            _                    => new ObjectResult(
-                                        ApiResponse.Fail(result.Error.Description, result.Error.Code))
-                                        { StatusCode = 500 }
+            ErrorType.NotFound     => new NotFoundObjectResult(
+                                         ApiResponse.Fail(result.Error.Description, result.Error.Code)),
+            ErrorType.Validation   => new BadRequestObjectResult(
+                                         ApiResponse.Fail(result.Error.Description, result.Error.Code)),
+            ErrorType.Conflict     => new ConflictObjectResult(
+                                         ApiResponse.Fail(result.Error.Description, result.Error.Code)),
+            ErrorType.Unauthorized => new UnauthorizedObjectResult(
+                                         ApiResponse.Fail(result.Error.Description, result.Error.Code)),
+            ErrorType.Forbidden    => new ObjectResult(
+                                         ApiResponse.Fail(result.Error.Description, result.Error.Code))
+                                         { StatusCode = 403 },
+            _                      => new ObjectResult(
+                                         ApiResponse.Fail(result.Error.Description, result.Error.Code))
+                                         { StatusCode = 500 }
         };
     }
 }

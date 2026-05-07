@@ -1,10 +1,13 @@
 using BookStore.API.Extensions;
 using BookStore.API.Middleware;
 using BookStore.Application.Auth.IService;
+using BookStore.Application.Media;
+using BookStore.Application.Media.IService;
 using BookStore.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -22,6 +25,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRepositories(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddMinioServices(builder.Configuration);
 
 
 
@@ -156,6 +160,15 @@ using (var scope = app.Services.CreateScope())
             await userManager.AddToRoleAsync(admin, "Admin");
         }
     }
+}
+
+// Khởi tạo MinIO buckets khi startup
+using (var scope = app.Services.CreateScope())
+{
+    var storageService = scope.ServiceProvider.GetRequiredService<IMinioStorageService>();
+    var minioSettings  = scope.ServiceProvider.GetRequiredService<IOptions<MinioSettings>>().Value;
+    var buckets        = minioSettings.Buckets.Values;
+    await storageService.EnsureBucketsAsync(buckets, CancellationToken.None);
 }
 
 app.MapHealthCheckEndpoints();
