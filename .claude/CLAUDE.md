@@ -183,3 +183,4 @@ Application/
 6. Fix root cause, không patch symptom
 7. Dependency rule nghiêm ngặt — Domain không biết tầng nào khác
 8. SOLID checklist bắt buộc trước khi hoàn thành bất kỳ class nào (xem Rule 0)
+9. **Không tự ý commit hoặc push** — chỉ thực hiện khi user yêu cầu tường minh (xem `.claude/rules/git-workflow/RULE.md`)
