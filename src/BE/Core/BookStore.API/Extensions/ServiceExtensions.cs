@@ -3,16 +3,21 @@ using BookStore.Application.Auth.IService;
 using BookStore.Application.Auth.Services;
 using BookStore.Application.Categories.IService;
 using BookStore.Application.Categories.Services;
+using BookStore.Application.Media;
+using BookStore.Application.Media.IService;
+using BookStore.Application.Media.Services;
 using BookStore.API.Services;
 using BookStore.API.Validators;
 using BookStore.Domain.Entities;
 using BookStore.Domain.IRepository;
 using BookStore.Infrastructure.Data;
 using BookStore.Infrastructure.Repository;
+using BookStore.Infrastructure.Storage;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Minio;
 
 namespace BookStore.API.Extensions;
 
@@ -54,8 +59,32 @@ public static class ServiceExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddMemoryCache();
         services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
+        // Media module
+        services.AddScoped<IMediaRepository, MediaRepository>();
+        services.AddScoped<IMediaService, MediaService>();
+        services.AddScoped<IMediaQueryService, MediaQueryService>();
+
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();
+        return services;
+    }
+
+    public static IServiceCollection AddMinioServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<MinioSettings>(configuration.GetSection("MinioSettings"));
+
+        var settings = configuration.GetSection("MinioSettings").Get<MinioSettings>()
+            ?? throw new InvalidOperationException("MinioSettings section is missing.");
+
+        services.AddMinio(client => client
+            .WithEndpoint(settings.Endpoint)
+            .WithCredentials(settings.AccessKey, settings.SecretKey)
+            .WithSSL(settings.UseSsl));
+
+        services.AddScoped<IMinioStorageService, MinioStorageService>();
+
         return services;
     }
 }

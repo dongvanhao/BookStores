@@ -25,9 +25,11 @@ public sealed class Error
     public static Error Conflict(string code, string description)
         => new(code, description, ErrorType.Conflict); // Lỗi xung đột
     public static Error Unauthorized(string code, string description)
-        => new(code, description, ErrorType.Unauthorized); // Lỗi không có quyền truy cập
-        public static Error Unexpected(string code, string description)
-        => new(code, description, ErrorType.Unexpected); // Lỗi không mong muốn
+        => new(code, description, ErrorType.Unauthorized);
+    public static Error Forbidden(string code, string description)
+        => new(code, description, ErrorType.Forbidden);
+    public static Error Unexpected(string code, string description)
+        => new(code, description, ErrorType.Unexpected);
 
     public override string ToString() => $"{Code} - {Description}";
 }

@@ -16,6 +16,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<Order>        Orders        => Set<Order>();
     public DbSet<OrderItem>    OrderItems    => Set<OrderItem>();
     public DbSet<Review>       Reviews       => Set<Review>();
+    public DbSet<Media>        Media         => Set<Media>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

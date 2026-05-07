@@ -29,6 +29,7 @@ namespace BookStore.API.Controller
         }
 
         // Dùng cho POST — trả về 201 Created kèm Location header
+        // T phải là Guid hoặc type có thể dùng trực tiếp làm route value
         protected IActionResult HandleCreated<T>(Result<T> result, string actionName)
         {
             if (result.IsSuccess)
@@ -36,6 +37,21 @@ namespace BookStore.API.Controller
                 return CreatedAtAction(
                     actionName,
                     new { id = result.Value },
+                    ApiResponse<T>.Ok(result.Value, "Resource created successfully.")
+                );
+            }
+
+            return MapError<T>(result.Error);
+        }
+
+        // Overload cho trường hợp T là complex type (VD: MediaDto) — caller tự trích route values
+        protected IActionResult HandleCreated<T>(Result<T> result, string actionName, Func<T, object> routeValues)
+        {
+            if (result.IsSuccess)
+            {
+                return CreatedAtAction(
+                    actionName,
+                    routeValues(result.Value!),
                     ApiResponse<T>.Ok(result.Value, "Resource created successfully.")
                 );
             }
@@ -59,11 +75,12 @@ namespace BookStore.API.Controller
 
             return error.Type switch
             {
-                ErrorType.NotFound => NotFound(response),
-                ErrorType.Validation => BadRequest(response),
-                ErrorType.Conflict => Conflict(response),
+                ErrorType.NotFound     => NotFound(response),
+                ErrorType.Validation   => BadRequest(response),
+                ErrorType.Conflict     => Conflict(response),
                 ErrorType.Unauthorized => Unauthorized(response),
-                _ => StatusCode(StatusCodes.Status500InternalServerError, response)
+                ErrorType.Forbidden    => StatusCode(StatusCodes.Status403Forbidden, response),
+                _                      => StatusCode(StatusCodes.Status500InternalServerError, response)
             };
         }
 
@@ -73,11 +90,12 @@ namespace BookStore.API.Controller
 
             return error.Type switch
             {
-                ErrorType.NotFound => NotFound(response),
-                ErrorType.Validation => BadRequest(response),
-                ErrorType.Conflict => Conflict(response),
+                ErrorType.NotFound     => NotFound(response),
+                ErrorType.Validation   => BadRequest(response),
+                ErrorType.Conflict     => Conflict(response),
                 ErrorType.Unauthorized => Unauthorized(response),
-                _ => StatusCode(StatusCodes.Status500InternalServerError, response)
+                ErrorType.Forbidden    => StatusCode(StatusCodes.Status403Forbidden, response),
+                _                      => StatusCode(StatusCodes.Status500InternalServerError, response)
             };
         }
     }
