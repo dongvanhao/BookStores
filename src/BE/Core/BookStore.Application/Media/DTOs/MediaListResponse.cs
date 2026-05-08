@@ -2,8 +2,8 @@ namespace BookStore.Application.Media.DTOs;
 
 public sealed record MediaListResponse
 {
-    public IReadOnlyList<MediaDto> Data { get; init; } = [];
-    public MediaCursorMeta         Meta { get; init; } = null!;
+    public IReadOnlyList<MediaSummaryDto> Data { get; init; } = [];
+    public MediaCursorMeta                Meta { get; init; } = null!;
 }
 
 public sealed record MediaCursorMeta

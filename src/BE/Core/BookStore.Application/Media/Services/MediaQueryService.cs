@@ -52,7 +52,14 @@ public sealed class MediaQueryService(
 
         var urls = await Task.WhenAll(urlTasks);
 
-        var dtos = items.Select((m, i) => MediaService.MapToDto(m, urls[i], null)).ToList();
+        var dtos = items.Select((m, i) => new MediaSummaryDto
+        {
+            Id           = m.Id,
+            Url          = urls[i],
+            ThumbnailUrl = null,
+            Type         = m.Type.ToString().ToLowerInvariant(),
+            CreatedAt    = m.CreatedAt
+        }).ToList();
 
         return new MediaListResponse
         {
