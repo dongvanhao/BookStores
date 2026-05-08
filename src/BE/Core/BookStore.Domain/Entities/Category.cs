@@ -14,6 +14,10 @@ public class Category : BaseEntity
     public Category? Parent { get; private set; }
     public ICollection<Category> Children { get; private set; } = [];
 
+    // MinIO — null nếu chưa có icon
+    public string? IconObjectKey { get; private set; }
+    public Guid?   IconMediaId   { get; private set; }
+
     // Navigation
     public ICollection<Book> Books { get; private set; } = [];
 
@@ -42,5 +46,19 @@ public class Category : BaseEntity
         ParentId    = parentId;
         UpdatedAt   = DateTime.UtcNow;
         return Result.Success();
+    }
+
+    public void UpdateIcon(string objectKey, Guid mediaId)
+    {
+        IconObjectKey = objectKey;
+        IconMediaId   = mediaId;
+        UpdatedAt     = DateTime.UtcNow;
+    }
+
+    public void RemoveIcon()
+    {
+        IconObjectKey = null;
+        IconMediaId   = null;
+        UpdatedAt     = DateTime.UtcNow;
     }
 }

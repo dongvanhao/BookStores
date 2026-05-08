@@ -7,6 +7,7 @@ public record CategoryDto(
     Guid? ParentId,
     string? ParentName,
     int ChildrenCount,
+    string? IconUrl,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );
