@@ -56,20 +56,6 @@ public class CategoriesController(
         return HandleResult(result);
     }
 
-    /// <summary>Get the subtree rooted at the specified category.</summary>
-    /// <param name="id">Root category GUID.</param>
-    /// <response code="200">Returns CategoryTreeDto with nested children.</response>
-    /// <response code="404">Category not found.</response>
-    [HttpGet("{id:guid}/subtree")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<CategoryTreeDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<CategoryTreeDto>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSubtree(Guid id, CancellationToken ct)
-    {
-        var result = await queryService.GetSubtreeAsync(id, ct);
-        return HandleResult(result);
-    }
-
     // -----------------------------------------------------------------------
     // Commands (Admin only)
     // -----------------------------------------------------------------------
@@ -89,7 +75,7 @@ public class CategoriesController(
         return HandleCreated(result, nameof(GetById));
     }
 
-    /// <summary>Update an existing category.</summary>
+    /// <summary>Update an existing category (full replace).</summary>
     /// <param name="id">Category GUID.</param>
     /// <response code="200">Category updated.</response>
     /// <response code="400">Validation failed or circular reference detected.</response>
@@ -102,6 +88,22 @@ public class CategoriesController(
     public async Task<IActionResult> Update(Guid id, UpdateCategoryCommand cmd, CancellationToken ct)
     {
         var result = await commandService.UpdateAsync(id, cmd, ct);
+        return HandleResult(result);
+    }
+
+    /// <summary>Partially update a category. Only provided (non-null) fields are changed.</summary>
+    /// <param name="id">Category GUID.</param>
+    /// <response code="200">Category patched.</response>
+    /// <response code="400">Validation failed or circular reference detected.</response>
+    /// <response code="404">Category or parent not found.</response>
+    [HttpPatch("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Patch(Guid id, PatchCategoryCommand cmd, CancellationToken ct)
+    {
+        var result = await commandService.PatchAsync(id, cmd, ct);
         return HandleResult(result);
     }
 
@@ -120,4 +122,5 @@ public class CategoriesController(
         var result = await commandService.DeleteAsync(id, ct);
         return HandleResult(result);
     }
+
 }

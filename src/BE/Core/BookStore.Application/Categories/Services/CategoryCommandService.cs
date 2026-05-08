@@ -51,6 +51,35 @@ public class CategoryCommandService(
         return Result.Success();
     }
 
+    public async Task<Result> PatchAsync(Guid id, PatchCategoryCommand cmd, CancellationToken ct = default)
+    {
+        var category = await categoryRepo.GetByIdAsync(id, ct);
+        if (category is null)
+            return Result.Failure(CategoryErrors.NotFound(id));
+
+        var newName        = cmd.Name        ?? category.Name;
+        var newDescription = cmd.Description ?? category.Description;
+        var newParentId    = cmd.ParentId    ?? category.ParentId;
+
+        if (cmd.ParentId.HasValue && cmd.ParentId != category.ParentId)
+        {
+            var parent = await categoryRepo.GetByIdAsync(cmd.ParentId.Value, ct);
+            if (parent is null)
+                return Result.Failure(CategoryErrors.ParentNotFound(cmd.ParentId.Value));
+
+            var descendants = await categoryRepo.GetDescendantIdsAsync(id, ct);
+            if (descendants.Contains(cmd.ParentId.Value))
+                return Result.Failure(CategoryErrors.CircularReference);
+        }
+
+        var updateResult = category.Update(newName, newDescription, newParentId);
+        if (!updateResult.IsSuccess)
+            return updateResult;
+
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
     public async Task<Result> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var category = await categoryRepo.GetByIdAsync(id, ct);

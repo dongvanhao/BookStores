@@ -101,6 +101,7 @@ public sealed class MediaService(
     internal static MediaDto MapToDto(MediaEntity media, string url, string? thumbnailUrl) => new()
     {
         Id           = media.Id,
+        ObjectKey    = media.ObjectKey,
         Url          = url,
         ThumbnailUrl = thumbnailUrl,
         Type         = media.Type.ToString().ToLowerInvariant(),

@@ -19,6 +19,11 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(c => c.Description)
                .HasMaxLength(500);
 
+        builder.Property(c => c.IconObjectKey)
+               .HasMaxLength(500);
+
+        builder.Property(c => c.IconMediaId);   // nullable Guid FK — no cascade
+
         builder.Property(c => c.CreatedAt).IsRequired();
         builder.Property(c => c.UpdatedAt).IsRequired();
 
