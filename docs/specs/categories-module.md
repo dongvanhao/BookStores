@@ -29,10 +29,19 @@ Xây dựng CRUD + hierarchical tree API cho entity `Category` — hỗ trợ đ
 - **Delete with books**: Nếu category có sách → HTTP 409, `Category.HasBooks`.
 - **Parent not found**: `parentId` được cung cấp nhưng không tồn tại → HTTP 404, `Category.ParentNotFound`.
 
+### 4. Icon Upload (tích hợp Media module) — Acceptance Criteria
+- Upload icon/thumbnail cho category qua `POST /api/categories/{id}/icon`
+- Sử dụng `IMediaService.UploadAsync` với `module = "categories"` — không upload trực tiếp lên MinIO
+- `Category` entity lưu `IconObjectKey` (string?, nullable) — không lưu presigned URL
+- Khi `GET /api/categories/{id}` trả về, generate presigned URL on-the-fly từ `IconObjectKey` qua `IMinioStorageService`
+- Xóa icon: `DELETE /api/categories/{id}/icon` — gọi `IMediaService.DeleteAsync`, set `IconObjectKey = null`
+- **Acceptance:** Upload thành công → `CategoryDto.IconUrl` có presigned URL (1 giờ). Nếu không có icon → `null`.
+
+> **Bucket:** Cần thêm `"categories": "category-icons"` vào `MinioSettings.Buckets` trong `appsettings.json`.
+
 ---
 
 ## Out of Scope
-- Image/icon upload cho category (MinIO — để sau)
 - Soft delete (dùng hard delete — category không có `IsDeleted`)
 - Move subtree (batch re-parent)
 - Ordering/weight trong cùng level
@@ -46,6 +55,11 @@ Xây dựng CRUD + hierarchical tree API cho entity `Category` — hỗ trợ đ
 - `Name`, `Description`, `ParentId`, `Parent`, `Children`, `Books`
 - `Create(name, description, parentId)` — factory method
 - `Update(name, description, parentId)` — kiểm tra self-parent, trả `Result`
+
+**Cần thêm vào `Category` entity (cho F4 — icon):**
+- `IconObjectKey` — `string?` property, nullable, lưu key MinIO (ví dụ `categories/2026/05/08/{guid}.png`)
+- `UpdateIcon(objectKey)` — set `IconObjectKey`, trả `Result`
+- `RemoveIcon()` — set `IconObjectKey = null`
 
 **Cần thêm vào Domain:**
 - `CategoryErrors` — ĐÃ CÓ `SelfParent`, `NotFound(id)`. Cần thêm:
@@ -65,19 +79,20 @@ Application/
   Categories/
     IService/
       ICategoryQueryService.cs   ← GetById, GetPaged, GetTree, GetSubtree
-      ICategoryCommandService.cs ← Create, Update, Delete
+      ICategoryCommandService.cs ← Create, Update, Delete, UploadIcon, DeleteIcon
     Services/
       CategoryQueryService.cs
       CategoryCommandService.cs
     Commands/
       CreateCategoryCommand.cs
       UpdateCategoryCommand.cs
+      UploadCategoryIconCommand.cs   ← File (IFormFile), CategoryId (Guid), UploadedBy (Guid)
     Queries/
-      GetCategoriesQuery.cs      ← kế thừa QueryParams
+      GetCategoriesQuery.cs          ← kế thừa QueryParams
     DTOs/
-      CategoryDto.cs             ← flat (Id, Name, Description, ParentId, ParentName)
-      CategoryTreeDto.cs         ← nested (Id, Name, Description, Children: List<CategoryTreeDto>)
-    CategoryErrors.cs            ← (thêm vào Domain/Errors/CategoryErrors.cs)
+      CategoryDto.cs                 ← flat (Id, Name, Description, ParentId, ParentName, IconUrl, ...)
+      CategoryTreeDto.cs             ← nested (Id, Name, Description, IconUrl, Children: List<CategoryTreeDto>)
+    CategoryErrors.cs
 ```
 
 **Service methods:**
@@ -91,6 +106,8 @@ Application/
 | `ICategoryCommandService` | `CreateAsync(cmd, ct)` → `Result<Guid>` | Tạo mới |
 | | `UpdateAsync(id, cmd, ct)` → `Result` | Cập nhật |
 | | `DeleteAsync(id, ct)` → `Result` | Xóa vật lý |
+| | `UploadIconAsync(cmd, ct)` → `Result<string>` | Upload icon, trả presigned URL |
+| | `DeleteIconAsync(id, userId, ct)` → `Result` | Xóa icon khỏi MinIO + DB |
 
 **Circular reference detection** — trong `CategoryCommandService`:
 ```
@@ -98,6 +115,22 @@ Khi update parentId:
   1. Nếu parentId == id → SelfParent (đã có trong domain)
   2. Load toàn bộ descendants của category hiện tại
   3. Nếu parentId nằm trong tập descendants → CircularReference
+```
+
+**Icon flow** — trong `CategoryCommandService`:
+```
+UploadIconAsync:
+  1. Load category, NotFound nếu không tồn tại
+  2. Gọi _mediaService.UploadAsync(UploadMediaCommand { File, Module = "categories", UploadedBy })
+  3. Gọi category.UpdateIcon(mediaResult.Value.ObjectKey)
+  4. SaveChangesAsync → trả presigned URL từ MediaDto.Url
+
+DeleteIconAsync:
+  1. Load category, NotFound nếu không tồn tại
+  2. Nếu IconObjectKey == null → trả success (idempotent)
+  3. Lookup Media record theo ObjectKey để lấy mediaId
+  4. Gọi _mediaService.DeleteAsync(mediaId, userId, isAdmin)
+  5. category.RemoveIcon() → SaveChangesAsync
 ```
 
 ### Infrastructure
@@ -118,7 +151,7 @@ public interface ICategoryRepository
 }
 ```
 
-**EF Core config:** ĐÃ CÓ (`CategoryConfiguration.cs`) — không cần migration mới.
+**EF Core config:** Cần thêm migration `AddCategoryIconObjectKey` để thêm column `IconObjectKey` (nvarchar(500), nullable).
 
 **Repository Implementation** — `Infrastructure/Repository/CategoryRepository.cs`
 - `GetDescendantIdsAsync`: Recursive CTE hoặc traversal in-memory (tập nhỏ — load all và traverse)
@@ -135,6 +168,8 @@ public interface ICategoryRepository
 | POST | `/api/categories` | Admin | Tạo category |
 | PUT | `/api/categories/{id}` | Admin | Cập nhật category |
 | DELETE | `/api/categories/{id}` | Admin | Xóa category |
+| POST | `/api/categories/{id}/icon` | Admin | Upload icon (multipart/form-data) |
+| DELETE | `/api/categories/{id}/icon` | Admin | Xóa icon |
 
 **Controller:** `CategoriesController : BaseController`
 
@@ -151,6 +186,7 @@ public record CategoryDto(
     Guid? ParentId,
     string? ParentName,
     int ChildrenCount,
+    string? IconUrl,         // presigned URL, null nếu không có icon
     DateTime CreatedAt,
     DateTime UpdatedAt
 );
@@ -160,6 +196,7 @@ public record CategoryTreeDto(
     Guid Id,
     string Name,
     string? Description,
+    string? IconUrl,         // presigned URL, null nếu không có icon
     List<CategoryTreeDto> Children
 );
 
@@ -188,10 +225,12 @@ public sealed class GetCategoriesQuery : QueryParams
 | Circular reference | Application | Service traverse descendants → `CategoryErrors.CircularReference` |
 | Delete với children | Application | Service query DB → `CategoryErrors.HasChildren` |
 | Delete với books | Application | Service query DB → `CategoryErrors.HasBooks` |
+| Icon: file required, MIME type, size | API | Tái dùng `UploadMediaRequestValidator` từ Media module |
 
 **Validators:**
 - `CreateCategoryCommandValidator` — `Name` NotEmpty + MaxLength(100), `Description` MaxLength(500)
 - `UpdateCategoryCommandValidator` — tương tự
+- Icon upload: tái dùng `UploadMediaRequestValidator` đã có sẵn trong API layer
 
 ---
 
@@ -204,6 +243,9 @@ public sealed class GetCategoriesQuery : QueryParams
 - `UpdateAsync_ShouldFail_WhenCircularReference` — parentId là descendant
 - `DeleteAsync_ShouldFail_WhenHasChildren` — category còn child
 - `DeleteAsync_ShouldFail_WhenHasBooks` — category còn sách
+- `UploadIconAsync_ShouldReturnUrl_WhenSuccess` — mock `IMediaService`
+- `DeleteIconAsync_ShouldSucceed_WhenIconExists` — xóa icon
+- `DeleteIconAsync_ShouldSucceed_WhenNoIcon` — idempotent khi không có icon
 
 ### Unit Test — CategoryQueryService
 - `GetByIdAsync_ShouldReturnDto_WhenFound`
@@ -212,8 +254,10 @@ public sealed class GetCategoriesQuery : QueryParams
 
 ### Unit Test — Domain
 - `Category_Update_ShouldFail_WhenParentIsSelf` — domain invariant
+- `Category_UpdateIcon_ShouldSetObjectKey`
+- `Category_RemoveIcon_ShouldSetNull`
 
-**Mocks:** `ICategoryRepository`, `IUnitOfWork`
+**Mocks:** `ICategoryRepository`, `IUnitOfWork`, `IMediaService`
 
 ---
 
@@ -225,13 +269,16 @@ public sealed class GetCategoriesQuery : QueryParams
 - Controller chỉ gọi `HandleResult()` từ `BaseController`
 - SOLID: tách `ICategoryQueryService` / `ICategoryCommandService` (ISP)
 - Validation đúng tầng (format ở API, business rule ở Application, invariant ở Domain)
+- Icon: lưu `IconObjectKey` vào DB, **không** lưu presigned URL — generate on-the-fly
 
 ### Ask First
 - Thêm soft delete cho Category
-- Thêm image upload cho Category (MinIO)
 - Thay đổi delete behavior (cascade vs restrict)
+- Tăng giới hạn file size cho icon
 
 ### Never Do
 - Circular reference check trong Domain (cần DB query — thuộc Application)
 - Business logic trong Controller
 - N+1 khi load tree (load all + build in-memory)
+- Upload file MinIO trực tiếp trong CategoryCommandService — phải đi qua `IMediaService`
+- Lưu presigned URL vào `IconObjectKey` — URL có expire, không bền vững
