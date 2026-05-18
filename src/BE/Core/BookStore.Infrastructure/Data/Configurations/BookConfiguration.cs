@@ -54,11 +54,6 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
                .HasForeignKey(b => b.CategoryId)
                .OnDelete(DeleteBehavior.Restrict);
 
-        // Many-to-many Book ↔ Author
-        builder.HasMany(b => b.Authors)
-               .WithMany(a => a.Books)
-               .UsingEntity(j => j.ToTable("BookAuthors"));
-
         // Soft delete filter — mặc định không trả về sách đã xoá
         builder.HasQueryFilter(b => !b.IsDeleted);
     }

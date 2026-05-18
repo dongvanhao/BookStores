@@ -8,8 +8,8 @@ public class Author : BaseEntity
     public string? Bio { get; private set; }
     public string? AvatarUrl { get; private set; }
 
-    // Navigation — many-to-many với Book
-    public ICollection<Book> Books { get; private set; } = [];
+    // Navigation — many-to-many với Book qua explicit join entity
+    public ICollection<BookAuthor> BookAuthors { get; private set; } = [];
 
     private Author() { }
 
