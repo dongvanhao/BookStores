@@ -32,11 +32,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "E:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj": {
-                "projectPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj"
+              "e:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj": {
+                "projectPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj"
               },
-              "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj": {
-                "projectPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj"
+              "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj": {
+                "projectPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj"
               }
             }
           }
@@ -98,14 +98,14 @@
         }
       }
     },
-    "E:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj": {
+    "e:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj",
+        "projectUniqueName": "e:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj",
         "projectName": "BookStore.Domain",
-        "projectPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj",
+        "projectPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj",
         "packagesPath": "C:\\Users\\dongv\\.nuget\\packages\\",
-        "outputPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\obj\\",
+        "outputPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -126,8 +126,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj": {
-                "projectPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj"
+              "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj": {
+                "projectPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj"
               }
             }
           }
@@ -173,14 +173,14 @@
         }
       }
     },
-    "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj": {
+    "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj",
+        "projectUniqueName": "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj",
         "projectName": "BookStore.Shared",
-        "projectPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj",
+        "projectPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj",
         "packagesPath": "C:\\Users\\dongv\\.nuget\\packages\\",
-        "outputPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\obj\\",
+        "outputPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -282,11 +282,11 @@
               "E:\\BookStore\\src\\BE\\Core\\BookStore.Application\\BookStore.Application.csproj": {
                 "projectPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Application\\BookStore.Application.csproj"
               },
-              "E:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj": {
-                "projectPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj"
+              "e:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj": {
+                "projectPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Domain\\BookStore.Domain.csproj"
               },
-              "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj": {
-                "projectPath": "E:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj"
+              "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj": {
+                "projectPath": "e:\\BookStore\\src\\BE\\Core\\BookStore.Shared\\BookStore.Shared.csproj"
               }
             }
           }
@@ -307,6 +307,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[6.12.0, )"
+            },
+            "Microsoft.AspNetCore.Http": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
               "version": "[17.8.0, )"

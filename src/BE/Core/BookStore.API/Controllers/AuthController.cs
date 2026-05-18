@@ -23,9 +23,7 @@ public class AuthController : BaseController
         _blacklist   = blacklist;
     }
 
-    /// <summary>Register a new customer account.</summary>
-    /// <response code="201">Account created — returns tokens + user info.</response>
-    /// <response code="409">Email already in use.</response>
+
     [HttpPost("register")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status201Created)]
@@ -38,9 +36,6 @@ public class AuthController : BaseController
         return HandleResult(result);
     }
 
-    /// <summary>Authenticate with email and password.</summary>
-    /// <response code="200">Returns access token, refresh token and user info.</response>
-    /// <response code="401">Invalid credentials.</response>
     [HttpPost("login")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
@@ -51,10 +46,6 @@ public class AuthController : BaseController
         return HandleResult(result);
     }
 
-    /// <summary>Exchange a valid refresh token for a new token pair.</summary>
-    /// <response code="200">Returns new access token and refresh token.</response>
-    /// <response code="401">Refresh token invalid or expired.</response>
-    /// <response code="404">Refresh token not found.</response>
     [HttpPost("refresh")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
@@ -66,9 +57,7 @@ public class AuthController : BaseController
         return HandleResult(result);
     }
 
-    /// <summary>Revoke the caller's refresh token (logout).</summary>
-    /// <response code="204">Token revoked — no content.</response>
-    /// <response code="404">Token not found.</response>
+
     [HttpPost("logout")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -92,9 +81,6 @@ public class AuthController : BaseController
         return NoContent();
     }
 
-    /// <summary>Return the currently authenticated user's profile.</summary>
-    /// <response code="200">Returns UserDto.</response>
-    /// <response code="401">Not authenticated.</response>
     [HttpGet("me")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]

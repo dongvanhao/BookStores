@@ -79,6 +79,16 @@ public class CategoryQueryService(
         return dtos.ToList();
     }
 
+    public async Task<Result<CategoryTreeDto>> GetSubtreeAsync(Guid id, CancellationToken ct = default)
+    {
+        var all  = await categoryRepo.GetAllWithChildrenAsync(ct);
+        var root = all.FirstOrDefault(c => c.Id == id);
+        if (root is null)
+            return CategoryErrors.NotFound(id);
+
+        return await BuildTreeDtoAsync(root);
+    }
+
     private async Task<CategoryDto> ToDtoAsync(Category c)
     {
         var iconUrl = c.IconObjectKey is not null

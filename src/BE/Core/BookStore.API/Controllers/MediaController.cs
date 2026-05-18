@@ -23,10 +23,7 @@ public class MediaController(
 
     private bool IsAdmin => User.IsInRole("Admin");
 
-    /// <summary>Upload một file lên MinIO và lưu metadata vào DB.</summary>
-    /// <response code="201">Upload thành công, trả về MediaDto kèm presigned URL.</response>
-    /// <response code="400">File không hợp lệ (sai MIME type hoặc quá kích thước).</response>
-    /// <response code="401">Chưa xác thực.</response>
+
     [HttpPost("upload")]
     [ProducesResponseType(typeof(ApiResponse<MediaDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
@@ -43,11 +40,6 @@ public class MediaController(
         return HandleCreated(result, nameof(GetById), dto => new { id = dto.Id });
     }
 
-    /// <summary>Lấy thông tin một media item kèm presigned URL mới.</summary>
-    /// <param name="id">Media GUID</param>
-    /// <response code="200">Trả về MediaDto.</response>
-    /// <response code="403">Không phải owner hoặc Admin.</response>
-    /// <response code="404">Media không tồn tại.</response>
     [HttpGet("{id:guid}", Name = nameof(GetById))]
     [ProducesResponseType(typeof(ApiResponse<MediaDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 403)]
@@ -58,11 +50,7 @@ public class MediaController(
         return HandleResult(result);
     }
 
-    /// <summary>Xóa một media item (kiểm tra ownership).</summary>
-    /// <param name="id">Media GUID</param>
-    /// <response code="204">Xóa thành công.</response>
-    /// <response code="403">Không phải owner hoặc Admin.</response>
-    /// <response code="404">Media không tồn tại.</response>
+
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(204)]
     [ProducesResponseType(typeof(ApiResponse<object>), 403)]
@@ -76,8 +64,7 @@ public class MediaController(
         return HandleResult(result);
     }
 
-    /// <summary>Lấy danh sách media với cursor pagination.</summary>
-    /// <response code="200">Trả về danh sách MediaDto kèm cursor metadata.</response>
+
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<MediaListResponse>), 200)]
     public async Task<IActionResult> GetList(
