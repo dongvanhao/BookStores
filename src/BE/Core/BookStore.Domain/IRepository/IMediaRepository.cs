@@ -6,6 +6,7 @@ namespace BookStore.Domain.IRepository;
 public interface IMediaRepository
 {
     Task<Media?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<Media?> GetByObjectKeyAsync(string objectKey, CancellationToken ct = default);
     Task<List<Media>> GetListAsync(
         Guid userId, bool isAdmin,
         string? module, MediaType? type,
