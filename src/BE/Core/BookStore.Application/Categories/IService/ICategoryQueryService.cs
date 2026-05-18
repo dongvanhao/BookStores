@@ -10,4 +10,5 @@ public interface ICategoryQueryService
     Task<Result<CategoryDto>> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<Result<PagedResult<CategoryDto>>> GetPagedAsync(GetCategoriesQuery query, CancellationToken ct = default);
     Task<Result<List<CategoryTreeDto>>> GetTreeAsync(CancellationToken ct = default);
+    Task<Result<CategoryTreeDto>>       GetSubtreeAsync(Guid id, CancellationToken ct = default);
 }

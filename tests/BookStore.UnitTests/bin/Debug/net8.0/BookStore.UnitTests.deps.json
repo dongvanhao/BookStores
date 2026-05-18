@@ -11,6 +11,8 @@
           "BookStore.Application": "1.0.0",
           "BookStore.Domain": "1.0.0",
           "BookStore.Shared": "1.0.0",
+          "FluentAssertions": "6.12.0",
+          "Microsoft.AspNetCore.Http": "2.3.0",
           "Microsoft.NET.Test.Sdk": "17.8.0",
           "Moq": "4.20.72",
           "xunit": "2.5.3"
@@ -32,6 +34,17 @@
           "lib/net6.0/Castle.Core.dll": {
             "assemblyVersion": "5.0.0.0",
             "fileVersion": "5.1.1.0"
+          }
+        }
+      },
+      "FluentAssertions/6.12.0": {
+        "dependencies": {
+          "System.Configuration.ConfigurationManager": "4.4.0"
+        },
+        "runtime": {
+          "lib/net6.0/FluentAssertions.dll": {
+            "assemblyVersion": "6.12.0.0",
+            "fileVersion": "6.12.0.0"
           }
         }
       },
@@ -60,6 +73,12 @@
             "assemblyVersion": "8.0.0.0",
             "fileVersion": "8.0.1725.26609"
           }
+        }
+      },
+      "Microsoft.AspNetCore.Http/2.3.0": {
+        "dependencies": {
+          "Microsoft.Extensions.ObjectPool": "8.0.11",
+          "Microsoft.Extensions.Options": "8.0.2"
         }
       },
       "Microsoft.CodeCoverage/17.8.0": {
@@ -157,6 +176,14 @@
           "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
             "assemblyVersion": "8.0.0.0",
             "fileVersion": "8.0.1024.46610"
+          }
+        }
+      },
+      "Microsoft.Extensions.ObjectPool/8.0.11": {
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.ObjectPool.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.1124.52116"
           }
         }
       },
@@ -492,6 +519,17 @@
           }
         }
       },
+      "System.Configuration.ConfigurationManager/4.4.0": {
+        "dependencies": {
+          "System.Security.Cryptography.ProtectedData": "4.4.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/System.Configuration.ConfigurationManager.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.6.25519.3"
+          }
+        }
+      },
       "System.IdentityModel.Tokens.Jwt/8.14.0": {
         "dependencies": {
           "Microsoft.IdentityModel.JsonWebTokens": "8.14.0",
@@ -509,6 +547,22 @@
           "lib/net8.0/System.Linq.Dynamic.Core.dll": {
             "assemblyVersion": "1.3.12.0",
             "fileVersion": "1.3.12.0"
+          }
+        }
+      },
+      "System.Security.Cryptography.ProtectedData/4.4.0": {
+        "runtime": {
+          "lib/netstandard2.0/System.Security.Cryptography.ProtectedData.dll": {
+            "assemblyVersion": "4.0.2.0",
+            "fileVersion": "4.6.25519.3"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/netstandard2.0/System.Security.Cryptography.ProtectedData.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "4.0.2.0",
+            "fileVersion": "4.6.25519.3"
           }
         }
       },
@@ -624,6 +678,13 @@
       "path": "castle.core/5.1.1",
       "hashPath": "castle.core.5.1.1.nupkg.sha512"
     },
+    "FluentAssertions/6.12.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ZXhHT2YwP9lajrwSKbLlFqsmCCvFJMoRSK9t7sImfnCyd0OB3MhgxdoMcVqxbq1iyxD6mD2fiackWmBb7ayiXQ==",
+      "path": "fluentassertions/6.12.0",
+      "hashPath": "fluentassertions.6.12.0.nupkg.sha512"
+    },
     "FluentValidation/11.3.0": {
       "type": "package",
       "serviceable": true,
@@ -644,6 +705,13 @@
       "sha512": "sha512-2UkrBsqtj2gyicV0JjZ7HkXoiMLFu6DteHh0OH4cPnMzTWZuUZdFP/chriDSrhp5+iz8Mq9E+XkrxXqo08Oddg==",
       "path": "microsoft.aspnetcore.cryptography.keyderivation/8.0.17",
       "hashPath": "microsoft.aspnetcore.cryptography.keyderivation.8.0.17.nupkg.sha512"
+    },
+    "Microsoft.AspNetCore.Http/2.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-I9azEG2tZ4DDHAFgv+N38e6Yhttvf+QjE2j2UYyCACE7Swm5/0uoihCMWZ87oOZYeqiEFSxbsfpT71OYHe2tpw==",
+      "path": "microsoft.aspnetcore.http/2.3.0",
+      "hashPath": "microsoft.aspnetcore.http.2.3.0.nupkg.sha512"
     },
     "Microsoft.CodeCoverage/17.8.0": {
       "type": "package",
@@ -707,6 +775,13 @@
       "sha512": "sha512-nroMDjS7hNBPtkZqVBbSiQaQjWRDxITI8Y7XnDs97rqG3EbzVTNLZQf7bIeUJcaHOV8bca47s1Uxq94+2oGdxA==",
       "path": "microsoft.extensions.logging.abstractions/8.0.2",
       "hashPath": "microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512"
+    },
+    "Microsoft.Extensions.ObjectPool/8.0.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-6ApKcHNJigXBfZa6XlDQ8feJpq7SG1ogZXg6M4FiNzgd6irs3LUAzo0Pfn4F2ZI9liGnH1XIBR/OtSbZmJAV5w==",
+      "path": "microsoft.extensions.objectpool/8.0.11",
+      "hashPath": "microsoft.extensions.objectpool.8.0.11.nupkg.sha512"
     },
     "Microsoft.Extensions.Options/8.0.2": {
       "type": "package",
@@ -785,6 +860,13 @@
       "path": "nuget.frameworks/6.5.0",
       "hashPath": "nuget.frameworks.6.5.0.nupkg.sha512"
     },
+    "System.Configuration.ConfigurationManager/4.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-gWwQv/Ug1qWJmHCmN17nAbxJYmQBM/E94QxKLksvUiiKB1Ld3Sc/eK1lgmbSjDFxkQhVuayI/cGFZhpBSodLrg==",
+      "path": "system.configuration.configurationmanager/4.4.0",
+      "hashPath": "system.configuration.configurationmanager.4.4.0.nupkg.sha512"
+    },
     "System.IdentityModel.Tokens.Jwt/8.14.0": {
       "type": "package",
       "serviceable": true,
@@ -798,6 +880,13 @@
       "sha512": "sha512-uriIEVgq1Wp1wcGohFkS4VESynM2za9BhCH/Vtaxtq8cwvRCobjq9ZLnCrzRLwtJqexKRaH2ItBZwuMRISsclw==",
       "path": "system.linq.dynamic.core/1.3.12",
       "hashPath": "system.linq.dynamic.core.1.3.12.nupkg.sha512"
+    },
+    "System.Security.Cryptography.ProtectedData/4.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-cJV7ScGW7EhatRsjehfvvYVBvtiSMKgN8bOVI0bQhnF5bU7vnHVIsH49Kva7i7GWaWYvmEzkYVk1TC+gZYBEog==",
+      "path": "system.security.cryptography.protecteddata/4.4.0",
+      "hashPath": "system.security.cryptography.protecteddata.4.4.0.nupkg.sha512"
     },
     "xunit/2.5.3": {
       "type": "package",

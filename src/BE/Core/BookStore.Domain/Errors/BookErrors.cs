@@ -18,4 +18,7 @@ public static class BookErrors
 
     public static Error CategoryNotFound(Guid id)
         => Error.NotFound("Book.CategoryNotFound", $"Category '{id}' was not found.");
+
+    public static Error InsufficientStock(Guid id)
+        => Error.Validation("Book.InsufficientStock", $"Book '{id}' does not have sufficient stock.");
 }
