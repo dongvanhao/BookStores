@@ -11,6 +11,9 @@ public class MediaRepository(AppDbContext context) : IMediaRepository
     public async Task<Media?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await context.Media.FirstOrDefaultAsync(m => m.Id == id, ct);
 
+    public async Task<Media?> GetByObjectKeyAsync(string objectKey, CancellationToken ct = default)
+        => await context.Media.FirstOrDefaultAsync(m => m.ObjectKey == objectKey, ct);
+
     public async Task<List<Media>> GetListAsync(
         Guid userId, bool isAdmin,
         string? module, MediaType? type,

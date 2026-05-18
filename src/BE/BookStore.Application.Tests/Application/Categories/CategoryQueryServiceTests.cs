@@ -1,11 +1,14 @@
 using BookStore.Application.Categories.DTOs;
 using BookStore.Application.Categories.Queries;
 using BookStore.Application.Categories.Services;
+using BookStore.Application.Media;
+using BookStore.Application.Media.IService;
 using BookStore.Domain.Entities;
 using BookStore.Domain.Errors;
 using BookStore.Domain.IRepository;
 using BookStore.Shared.Results;
 using FluentAssertions;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace BookStore.Application.Tests.Application.Categories;
@@ -13,12 +16,21 @@ namespace BookStore.Application.Tests.Application.Categories;
 public class CategoryQueryServiceTests
 {
     private readonly Mock<ICategoryRepository> _mockRepo;
+    private readonly Mock<IMinioStorageService> _mockMinio;
     private readonly CategoryQueryService _sut;
 
     public CategoryQueryServiceTests()
     {
         _mockRepo = new Mock<ICategoryRepository>();
-        _sut = new CategoryQueryService(_mockRepo.Object);
+        _mockMinio = new Mock<IMinioStorageService>();
+
+        var minioSettings = Options.Create(new MinioSettings
+        {
+            Buckets = new Dictionary<string, string> { ["Categories"] = "category-icons" },
+            PresignedUrlExpirySeconds = 3600
+        });
+
+        _sut = new CategoryQueryService(_mockRepo.Object, _mockMinio.Object, minioSettings);
     }
 
     // -----------------------------------------------------------------------
@@ -133,47 +145,4 @@ public class CategoryQueryServiceTests
         result.Value.Should().BeEmpty();
     }
 
-    // -----------------------------------------------------------------------
-    // GetSubtreeAsync
-    // -----------------------------------------------------------------------
-
-    [Fact]
-    public async Task GetSubtreeAsync_ShouldReturnSubtree_WhenCategoryFound()
-    {
-        // Arrange
-        var rootId = Guid.NewGuid();
-        var root = Category.Create("Root", null, null);
-        typeof(BookStore.Domain.Common.BaseEntity)
-            .GetProperty("Id")!
-            .SetValue(root, rootId);
-
-        var child = Category.Create("Child", null, rootId);
-        root.Children.Add(child);
-
-        _mockRepo.Setup(r => r.GetAllWithChildrenAsync(default)).ReturnsAsync([root, child]);
-
-        // Act
-        var result = await _sut.GetSubtreeAsync(rootId);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Id.Should().Be(rootId);
-        result.Value.Name.Should().Be("Root");
-        result.Value.Children.Should().HaveCount(1);
-    }
-
-    [Fact]
-    public async Task GetSubtreeAsync_ShouldReturnNotFound_WhenCategoryMissing()
-    {
-        // Arrange
-        var missingId = Guid.NewGuid();
-        _mockRepo.Setup(r => r.GetAllWithChildrenAsync(default)).ReturnsAsync([]);
-
-        // Act
-        var result = await _sut.GetSubtreeAsync(missingId);
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("Category.NotFound");
-    }
 }

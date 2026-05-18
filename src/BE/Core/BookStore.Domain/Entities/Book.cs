@@ -18,7 +18,7 @@ public class Book : BaseEntity
     public Category Category { get; private set; } = null!;
 
     // Navigation
-    public ICollection<Author> Authors { get; private set; } = [];
+    public ICollection<BookAuthor> BookAuthors { get; private set; } = [];
     public ICollection<Review> Reviews { get; private set; } = [];
     public ICollection<OrderItem> OrderItems { get; private set; } = [];
 

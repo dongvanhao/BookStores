@@ -1,6 +1,10 @@
 using BookStore.Application.Auth;
 using BookStore.Application.Auth.IService;
 using BookStore.Application.Auth.Services;
+using BookStore.Application.Authors.IService;
+using BookStore.Application.Authors.Services;
+using BookStore.Application.Books.IService;
+using BookStore.Application.Books.Services;
 using BookStore.Application.Categories.IService;
 using BookStore.Application.Categories.Services;
 using BookStore.Application.Media;
@@ -63,6 +67,14 @@ public static class ServiceExtensions
         services.AddScoped<IMediaRepository, MediaRepository>();
         services.AddScoped<IMediaService, MediaService>();
         services.AddScoped<IMediaQueryService, MediaQueryService>();
+        // Books module
+        services.AddScoped<IBookRepository, BookRepository>();
+        services.AddScoped<IBookCommandService, BookCommandService>();
+        services.AddScoped<IBookQueryService, BookQueryService>();
+        // Authors module
+        services.AddScoped<IAuthorRepository, AuthorRepository>();
+        services.AddScoped<IAuthorQueryService, AuthorQueryService>();
+        services.AddScoped<IAuthorCommandService, AuthorCommandService>();
 
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<RegisterCommandValidator>();

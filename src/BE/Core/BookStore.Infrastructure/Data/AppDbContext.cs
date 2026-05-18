@@ -12,6 +12,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Category>     Categories    => Set<Category>();
     public DbSet<Author>       Authors       => Set<Author>();
+    public DbSet<BookAuthor>   BookAuthors   => Set<BookAuthor>();
     public DbSet<Book>         Books         => Set<Book>();
     public DbSet<Order>        Orders        => Set<Order>();
     public DbSet<OrderItem>    OrderItems    => Set<OrderItem>();

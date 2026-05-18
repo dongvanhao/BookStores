@@ -8,6 +8,26 @@ Authors (quan hệ N-N với Books)
 
 ---
 
+## Trạng thái hiện tại (As-Is)
+
+| Artifact | Trạng thái |
+|----------|-----------|
+| `Author.cs` entity | ✅ Đã có — `FullName`, `Bio`, `AvatarUrl`, `SetAvatar()`. Navigation hiện là `ICollection<Book> Books` (skip nav, shortcut EF) |
+| `Book.cs` entity | ✅ Đã có — Navigation hiện là `ICollection<Author> Authors` (skip nav) |
+| `BookConfiguration.cs` | ⚠️ Dùng shortcut `.UsingEntity(j => j.ToTable("BookAuthors"))` — cần thay bằng explicit join entity |
+| `AuthorConfiguration.cs` | ✅ Đã có — đủ constraints |
+| `AuthorErrors.cs` | ❌ Chưa có |
+| `BookAuthor.cs` (join entity) | ❌ Chưa có |
+| `BookAuthorConfiguration.cs` | ❌ Chưa có |
+| `IAuthorRepository.cs` | ❌ Chưa có |
+| `AuthorRepository.cs` | ❌ Chưa có |
+| Application layer (Authors/) | ❌ Chưa có |
+| `AuthorsController.cs` | ❌ Chưa có |
+| Validators | ❌ Chưa có |
+| Unit tests | ❌ Chưa có |
+
+---
+
 ## Core Features
 
 ### 1. CRUD Author
@@ -22,16 +42,21 @@ Authors (quan hệ N-N với Books)
 ### 2. Upload Avatar (MinIO)
 **Acceptance criteria:**
 - Admin có thể upload ảnh `.jpg`, `.jpeg`, `.png`, `.webp`, tối đa **5 MB**
-- Avatar được lưu vào MinIO bucket `author-avatars` với object key `avatars/{authorId}/{filename}`
+- Avatar đi qua `IMediaService.UploadAsync` với `module = "authors"` — **không** gọi trực tiếp `IMinioStorageService`
+- `AvatarUrl` trong DB lưu **ObjectKey** (path) — không lưu presigned URL
+- Khi GET author, generate presigned URL on-the-fly từ `AvatarUrl` (ObjectKey) qua `IMinioStorageService.GeneratePresignedUrlAsync`
 - Endpoint riêng: `PATCH /api/authors/{id}/avatar` (không gộp vào PUT)
-- `AvatarUrl` trong DB lưu **presigned URL** hoặc **path** để generate URL khi cần
-- Khi upload ảnh mới, ảnh cũ bị xóa khỏi MinIO
+- Khi upload ảnh mới, ảnh cũ bị xóa khỏi MinIO qua `IMediaService.DeleteAsync`
+
+> **Bucket:** Thêm `"authors": "author-avatars"` vào `MinioSettings.Buckets` trong `appsettings.json`.
 
 ### 3. Mapping N-N Book ↔ Author (Explicit Join Entity)
 **Acceptance criteria:**
 - `BookAuthor` là entity tường minh với `BookId`, `AuthorId` (composite PK)
 - EF config trong `BookAuthorConfiguration` dùng `UsingEntity<BookAuthor>()` có đủ FK, composite PK, tên bảng
 - Loại bỏ shortcut `.UsingEntity(j => j.ToTable("BookAuthors"))` trong `BookConfiguration`
+- Navigation trên `Author`: thay `ICollection<Book> Books` → `ICollection<BookAuthor> BookAuthors`
+- Navigation trên `Book`: thay `ICollection<Author> Authors` → `ICollection<BookAuthor> BookAuthors`
 - API để gán/bỏ tác giả khỏi sách: **nằm trong Books Module** (out of scope bài này)
 
 ---
@@ -40,7 +65,7 @@ Authors (quan hệ N-N với Books)
 - Gán Author ↔ Book qua API (thuộc Books Module)
 - Author search by Book (cross-module query)
 - Soft delete Author (Author dùng hard delete có guard check)
-- Presigned URL generation service (MinIO URL lưu object path, generate URL trong service)
+- Presigned URL generation service (lưu ObjectKey, generate URL on-the-fly)
 
 ---
 
@@ -48,12 +73,17 @@ Authors (quan hệ N-N với Books)
 
 ### Domain Layer
 
-**Entity đã có — cần bổ sung:**
-
+**Entity đã có — cần cập nhật `Author.cs`:**
 ```csharp
-// BookStore.Domain/Entities/Author.cs — KHÔNG SỬA
-// FullName, Bio, AvatarUrl, SetAvatar() đã đủ
-// Thêm navigation: ICollection<BookAuthor> BookAuthors
+// BookStore.Domain/Entities/Author.cs
+// Thay ICollection<Book> Books thành:
+public ICollection<BookAuthor> BookAuthors { get; private set; } = [];
+```
+
+**Entity đã có — cần cập nhật `Book.cs`:**
+```csharp
+// BookStore.Domain/Entities/Book.cs
+// Thay ICollection<Author> Authors thành:
 public ICollection<BookAuthor> BookAuthors { get; private set; } = [];
 ```
 
@@ -71,14 +101,16 @@ public class BookAuthor
 }
 ```
 
-**Không có** BaseEntity (không cần Id/CreatedAt/UpdatedAt trên join table).
+> **Không có** BaseEntity (không cần Id/CreatedAt/UpdatedAt trên join table).
+
+> Khi dùng explicit join entity, skip navigations (`Book.Authors`, `Author.Books`) không còn được EF tự generate. Spec này chọn bỏ skip navigation để đơn giản, truy cập qua `author.BookAuthors.Select(ba => ba.Book)`.
 
 **Business Invariants:**
 - `FullName` không được rỗng, tối đa 150 ký tự (enforce ở FluentValidation)
 - `Bio` tùy chọn, tối đa 2000 ký tự
 - Xóa Author không được nếu còn liên kết với Book
 
-**Errors:**
+**Errors — mới tạo:**
 ```csharp
 // BookStore.Domain/Errors/AuthorErrors.cs
 public static class AuthorErrors
@@ -123,13 +155,11 @@ Application/
       AuthorDto.cs                 // danh sách: Id, FullName, Bio, AvatarUrl, BookCount, CreatedAt
       AuthorDetailDto.cs           // chi tiết: thêm Books (List<AuthorBookDto>)
       AuthorBookDto.cs             // nested: Id, Title, ISBN
-    AuthorErrors.cs                // đặt trong Domain, không phải đây
 ```
 
-> `AuthorErrors.cs` đặt tại `BookStore.Domain/Errors/AuthorErrors.cs` theo convention (xem Categories).
+> `AuthorErrors.cs` đặt tại `BookStore.Domain/Errors/AuthorErrors.cs` theo convention (xem `CategoryErrors.cs`).
 
 **Interfaces:**
-
 ```csharp
 // IAuthorQueryService
 Task<Result<PagedResult<AuthorDto>>> GetPagedAsync(GetAuthorsQuery query, CancellationToken ct = default);
@@ -139,7 +169,7 @@ Task<Result<AuthorDetailDto>> GetByIdAsync(Guid id, CancellationToken ct = defau
 Task<Result<Guid>> CreateAsync(CreateAuthorCommand command, CancellationToken ct = default);
 Task<Result> UpdateAsync(Guid id, UpdateAuthorCommand command, CancellationToken ct = default);
 Task<Result> DeleteAsync(Guid id, CancellationToken ct = default);
-Task<Result<string>> UploadAvatarAsync(Guid id, IFormFile file, CancellationToken ct = default);
+Task<Result<string>> UploadAvatarAsync(Guid id, IFormFile file, Guid uploadedBy, CancellationToken ct = default);
 ```
 
 **Repository interface (Domain layer):**
@@ -154,18 +184,32 @@ void Add(Author author);
 void Remove(Author author);
 ```
 
-**MinIO Storage abstraction:**
+**Storage abstraction — dùng lại interface đã có:**
 ```csharp
-// BookStore.Application/Common/IStorage/IStorageService.cs
-public interface IStorageService
-{
-    Task<string> UploadAsync(string bucketName, string objectKey, Stream content, string contentType, CancellationToken ct = default);
-    Task DeleteAsync(string bucketName, string objectKey, CancellationToken ct = default);
-    string GetObjectUrl(string bucketName, string objectKey);
-}
+// BookStore.Application/Media/IService/IMinioStorageService.cs — ĐÃ CÓ
+Task UploadAsync(string bucketName, string objectKey, Stream stream, string contentType, long size, CancellationToken ct);
+Task DeleteAsync(string bucketName, string objectKey, CancellationToken ct);
+Task<string> GeneratePresignedUrlAsync(string bucketName, string objectKey, int expirySeconds);
+Task EnsureBucketsAsync(IEnumerable<string> bucketNames, CancellationToken ct);
+
+// BookStore.Application/Media/IService/IMediaService.cs — ĐÃ CÓ
+Task<Result<MediaDto>> UploadAsync(UploadMediaCommand cmd, CancellationToken ct = default);
+Task<Result> DeleteAsync(Guid mediaId, Guid requestingUserId, bool isAdmin, CancellationToken ct = default);
 ```
 
-> Implementation `MinioStorageService` đặt tại `BookStore.Infrastructure/Storage/MinioStorageService.cs`
+> `AuthorCommandService` inject `IMediaService` (không inject `IMinioStorageService` trực tiếp).
+> `AuthorQueryService` inject `IMinioStorageService` để generate presigned URL khi trả `AuthorDto`/`AuthorDetailDto`.
+
+**Avatar flow — trong `AuthorCommandService`:**
+```
+UploadAvatarAsync:
+  1. Load author, NotFound nếu không tồn tại
+  2. Validate file (size <= 5 MB, extension hợp lệ) → trả lỗi tương ứng
+  3. Nếu AvatarUrl (ObjectKey) đang tồn tại → lookup Media record → gọi _mediaService.DeleteAsync
+  4. Gọi _mediaService.UploadAsync(UploadMediaCommand { File, Module = "authors", UploadedBy })
+  5. Gọi author.SetAvatar(mediaResult.Value.ObjectKey)
+  6. SaveChangesAsync → trả presigned URL từ MediaDto.Url
+```
 
 ---
 
@@ -196,35 +240,22 @@ public class BookAuthorConfiguration : IEntityTypeConfiguration<BookAuthor>
 
 **BookConfiguration — loại bỏ shortcut:**
 ```csharp
-// Xóa dòng sau trong BookConfiguration.cs:
-// builder.HasMany(b => b.Authors).WithMany(a => a.Books).UsingEntity(j => j.ToTable("BookAuthors"));
+// Xóa dòng sau trong BookConfiguration.cs (dòng 58-60 hiện tại):
+// builder.HasMany(b => b.Authors)
+//        .WithMany(a => a.Books)
+//        .UsingEntity(j => j.ToTable("BookAuthors"));
 // BookAuthorConfiguration xử lý toàn bộ relationship
 ```
 
-**Book entity — thêm navigation:**
+**MinioStorageService — đã có, không tạo mới:**
 ```csharp
-// Thay ICollection<Author> Authors thành:
-public ICollection<BookAuthor> BookAuthors { get; private set; } = [];
-// Skip navigation (vẫn query được book.Authors qua BookAuthors)
-```
-
-> Lưu ý: Khi dùng explicit join entity, skip navigations (`Book.Authors`, `Author.Books`) không còn được EF tự generate. Nếu muốn giữ, cần configure rõ ràng trong `BookAuthorConfiguration` với `HasSkipNavigation`. Spec này chọn bỏ skip navigation để đơn giản, truy cập qua `author.BookAuthors.Select(ba => ba.Book)`.
-
-**MinioStorageService:**
-```csharp
-// BookStore.Infrastructure/Storage/MinioStorageService.cs
-public class MinioStorageService(IMinioClient minioClient, IOptions<MinioSettings> options) : IStorageService
-{
-    Task<string> UploadAsync(...) // PutObjectAsync + return object URL
-    Task DeleteAsync(...)         // RemoveObjectAsync
-    string GetObjectUrl(...)      // construct URL từ endpoint + bucket + key
-}
+// BookStore.Infrastructure/Storage/MinioStorageService.cs — ĐÃ CÓ
+// Implement IMinioStorageService với: UploadAsync, DeleteAsync, GeneratePresignedUrlAsync, EnsureBucketsAsync
 ```
 
 **Migration:**
-- Khi `BookAuthor` thay EF shortcut → check xem migration nào đã tạo bảng `BookAuthors`
-- Nếu bảng chưa tồn tại → migration mới `AddBookAuthorExplicitJoin`
-- Nếu bảng đã tồn tại (từ shortcut) → migration update schema nếu schema thay đổi
+- Bảng `BookAuthors` đã tồn tại (tạo bởi shortcut) — migration `ReplaceBookAuthorsWithExplicitJoinEntity` chỉ cần kiểm tra schema, không drop/recreate nếu schema không đổi
+- Nếu EF phát hiện model change (do navigation property đổi) → tạo migration mới
 
 ---
 
@@ -273,8 +304,50 @@ public class AuthorsController(IAuthorQueryService queryService, IAuthorCommandS
     [HttpPatch("{id:guid}/avatar")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UploadAvatar(Guid id, IFormFile file, CancellationToken ct)
-        => HandleResult(await commandService.UploadAvatarAsync(id, file, ct));
+    {
+        var uploadedBy = GetCurrentUserId(); // helper từ BaseController
+        return HandleResult(await commandService.UploadAvatarAsync(id, file, uploadedBy, ct));
+    }
 }
+```
+
+---
+
+## DTOs
+
+```csharp
+// Danh sách — không embed Books
+public record AuthorDto(
+    Guid Id,
+    string FullName,
+    string? Bio,
+    string? AvatarUrl,     // presigned URL, null nếu không có avatar
+    int BookCount,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
+);
+
+// Chi tiết — embed Books
+public record AuthorDetailDto(
+    Guid Id,
+    string FullName,
+    string? Bio,
+    string? AvatarUrl,     // presigned URL, null nếu không có avatar
+    List<AuthorBookDto> Books,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
+);
+
+// Nested trong AuthorDetailDto
+public record AuthorBookDto(Guid Id, string Title, string ISBN);
+
+// Commands
+public record CreateAuthorCommand(string FullName, string? Bio);
+public record UpdateAuthorCommand(string FullName, string? Bio);
+
+// Query
+public sealed class GetAuthorsQuery : QueryParams { }
+// Kế thừa SearchTerm, SortBy, IsAscending, Page, PageSize từ QueryParams
 ```
 
 ---
@@ -291,68 +364,76 @@ public class AuthorsController(IAuthorQueryService queryService, IAuthorCommandS
 | Author exists | Application | Business rule: `GetByIdAsync != null` |
 | Author has no linked books | Application | Business rule: `HasBooksAsync` (before delete) |
 
-**Validators:**
-- `CreateAuthorCommandValidator` — FullName required + maxlength, Bio maxlength
-- `UpdateAuthorCommandValidator` — idem
-- File validation (size, extension) → làm trong Service (không dùng FluentValidation cho IFormFile)
+**Validators (đặt tại `BookStore.API/Validators/`):**
+- `CreateAuthorCommandValidator` — FullName NotEmpty + MaxLength(150), Bio MaxLength(2000)
+- `UpdateAuthorCommandValidator` — tương tự
+- File validation (size, extension) → làm trong Service (không dùng FluentValidation cho IFormFile, tái dùng pattern như `MediaService`)
 
 ---
 
 ## Testing Strategy
 
+Test project: `BookStore.Application.Tests/Application/Authors/`
+
 ### Unit Tests — AuthorCommandService
 ```
-CreateAsync_ShouldSucceed_WhenValidCommand
-CreateAsync_ShouldFail_WhenFullNameAlreadyExists      → Author.FullNameExists
-DeleteAsync_ShouldFail_WhenAuthorHasLinkedBooks       → Author.HasBooks
+CreateAsync_ShouldReturnGuid_WhenValidCommand
+CreateAsync_ShouldFail_WhenFullNameAlreadyExists          → Author.FullNameExists
+DeleteAsync_ShouldFail_WhenAuthorHasLinkedBooks           → Author.HasBooks
 DeleteAsync_ShouldSucceed_WhenNoLinkedBooks
-UpdateAsync_ShouldFail_WhenAuthorNotFound             → Author.NotFound
-UploadAvatarAsync_ShouldFail_WhenFileTooLarge         → Author.AvatarTooLarge
-UploadAvatarAsync_ShouldFail_WhenInvalidFormat        → Author.AvatarInvalidFormat
+UpdateAsync_ShouldFail_WhenAuthorNotFound                 → Author.NotFound
+UploadAvatarAsync_ShouldFail_WhenFileTooLarge             → Author.AvatarTooLarge
+UploadAvatarAsync_ShouldFail_WhenInvalidFormat            → Author.AvatarInvalidFormat
 UploadAvatarAsync_ShouldDeleteOldAvatar_WhenAvatarExists
+UploadAvatarAsync_ShouldReturnPresignedUrl_WhenSuccess
 ```
 
 ### Unit Tests — AuthorQueryService
 ```
 GetByIdAsync_ShouldReturnAuthorDetail_WhenFound
-GetByIdAsync_ShouldReturnNotFound_WhenMissing         → Author.NotFound
+GetByIdAsync_ShouldReturnNotFound_WhenMissing             → Author.NotFound
 GetPagedAsync_ShouldApplySearchTerm
+GetPagedAsync_ShouldReturnEmptyWhenNoMatch
 ```
 
-**Mocks cần:** `IAuthorRepository`, `IStorageService`, `IUnitOfWork`
+**Mocks cần:** `IAuthorRepository`, `IMediaService`, `IMinioStorageService`, `IUnitOfWork`
 
 ---
 
 ## Implementation Order (cho `/plan`)
 
-1. Domain: `BookAuthor` entity + `AuthorErrors`
-2. Domain: Update `Author` + `Book` navigation (thêm `BookAuthors` collection)
-3. Infrastructure: `BookAuthorConfiguration` + loại bỏ shortcut trong `BookConfiguration`
-4. Infrastructure: `MinioStorageService` + `IStorageService`
-5. Infrastructure: `AuthorRepository` + register DI
-6. Application: DTOs + Commands + Queries
-7. Application: `IAuthorQueryService` + `AuthorQueryService`
-8. Application: `IAuthorCommandService` + `AuthorCommandService` (có avatar upload)
-9. API: Validators + `AuthorsController`
-10. Migration: `AddBookAuthorExplicitJoin`
-11. Tests: Unit tests Service
+1. **Domain:** `BookAuthor` entity + `AuthorErrors.cs`
+2. **Domain:** Update `Author.cs` (thay `Books` → `BookAuthors`) + Update `Book.cs` (thay `Authors` → `BookAuthors`)
+3. **Domain:** `IAuthorRepository.cs`
+4. **Infrastructure:** `BookAuthorConfiguration.cs` + loại bỏ shortcut trong `BookConfiguration.cs`
+5. **Infrastructure:** `AuthorRepository.cs` + register DI
+6. **Infrastructure:** Migration `ReplaceBookAuthorsWithExplicitJoinEntity` (nếu EF phát hiện model change)
+7. **Infrastructure:** Thêm bucket `"authors": "author-avatars"` vào `MinioSettings.Buckets` + `appsettings.json`
+8. **Application:** DTOs (`AuthorDto`, `AuthorDetailDto`, `AuthorBookDto`) + Commands + Query
+9. **Application:** `IAuthorQueryService` + `AuthorQueryService`
+10. **Application:** `IAuthorCommandService` + `AuthorCommandService` (có avatar upload qua `IMediaService`)
+11. **API:** Validators + `AuthorsController`
+12. **Tests:** Unit tests `AuthorCommandServiceTests` + `AuthorQueryServiceTests`
 
 ---
 
 ## Boundaries
 
 ### Always Do
-- Dùng Result Pattern — không throw exception cho lỗi nghiệp vụ
-- Error code format: `Author.{Action}` (vd: `Author.NotFound`)
+- Result Pattern — không throw exception cho lỗi nghiệp vụ
+- Error code format: `Author.{Action}` (vd: `Author.NotFound`, `Author.HasBooks`)
 - Controller chỉ gọi `HandleResult()` / `HandlePagedResult()` / `HandleCreated()`
 - Validation format/required → FluentValidation; unique/exists → Service
 - `SaveChangesAsync` trong Service, không trong Repository
+- Upload avatar đi qua `IMediaService` (không gọi `IMinioStorageService` trực tiếp trong CommandService)
+- Lưu `ObjectKey` vào `Author.AvatarUrl`, generate presigned URL on-the-fly trong QueryService
 - MinIO operation thất bại → trả `Error.Failure`, không để exception bubble lên
 
 ### Ask First
 - Thêm field mới vào `Author` entity
 - Thêm NuGet package mới
 - Thay đổi schema của bảng `Books` hoặc `Authors` hiện có
+- Tăng giới hạn file size cho avatar (hiện 5 MB)
 
 ### Never Do
 - Business logic trong Controller
@@ -360,3 +441,5 @@ GetPagedAsync_ShouldApplySearchTerm
 - Skip navigation (`Author.Books`) nếu không configure rõ trong EF
 - Log ở Service — log tập trung tại Middleware
 - Throw exception cho lỗi nghiệp vụ (notfound, conflict, validation)
+- Gọi `IMinioStorageService.UploadAsync` trực tiếp trong `AuthorCommandService` — phải đi qua `IMediaService`
+- Lưu presigned URL vào `Author.AvatarUrl` — URL có expire, không bền vững
